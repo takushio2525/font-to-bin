@@ -28,11 +28,12 @@ export const DEFAULT_FORMAT: FormatOptions = {
   suffix: "",
 };
 
-const DEFAULT_FREE_W = 32;
-const DEFAULT_FREE_H = 32;
+// 自由キャンバスの初期値: 8×8のグリフが8文字並ぶ想定で 横64×縦8
+const DEFAULT_FREE_W = 64;
+const DEFAULT_FREE_H = 8;
 
 export const DEFAULT_STATE: AppState = {
-  text: "ABC",
+  text: "ABCあいう",
   fontId: "dotgothic16",
   width: 16,
   height: 16,
@@ -43,7 +44,7 @@ export const DEFAULT_STATE: AppState = {
   bold: false,
   format: DEFAULT_FORMAT,
   overrides: {},
-  previewGridStep: 8,
+  previewGridStep: 0,
   free: {
     width: DEFAULT_FREE_W,
     height: DEFAULT_FREE_H,

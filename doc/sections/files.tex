@@ -81,8 +81,11 @@ font-to-bin/
         （現在の \texttt{FormatOptions} から該当プリセットIDを推定）。
         かんたんモードでワンタッチ切替に使用。
   \item \texttt{src/core/defaults.ts}\,---\,\texttt{DEFAULT\_STATE}
-        （text=\texttt{"ABC"}, fontId=\texttt{dotgothic16},
-        16$\times$16, threshold=128）。
+        （text=\texttt{"ABCあいう"}, fontId=\texttt{dotgothic16},
+        16$\times$16, threshold=128,
+        previewGridStep=0（補助線なし））。
+        自由キャンバス初期値は 64$\times$8（8$\times$8 が 8 文字並ぶ想定）,
+        gridStep=8。
 \end{itemize}
 
 \subsection{hooks 層}
