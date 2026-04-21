@@ -59,6 +59,29 @@
         LocalStorage に書き戻す（\texttt{overrides} を除く）。
 \end{enumerate}
 
+\subsection{UI モード切替}
+
+初心者と上級者の双方をカバーするため、左カラムのコンテンツを
+\texttt{useMode}（\texttt{font\_to\_bin\_mode\_v1} キーで LocalStorage 永続化）
+の値で切り替える。
+
+\begin{tabularx}{\textwidth}{l X}
+\toprule
+\textbf{モード} & \textbf{左カラムに表示されるコンポーネント} \\
+\midrule
+\texttt{easy} & \texttt{EasyPanel}（3ステップ: 文字 → 見た目 → 用途プリセット）\\
+\texttt{advanced} & \texttt{InputPanel} + \texttt{FormatPanel}（現行の全設定）\\
+\bottomrule
+\end{tabularx}
+
+\vspace{2mm}
+
+プリセット選択時は \texttt{dispatch(\{type:"setFormat", format: preset.format\})}
+で \texttt{FormatOptions} を部分マージし、詳細モードへ切り替えた後も
+その設定が継続する。逆に詳細モードで変更した内容がどのプリセットにも一致しなくなった
+場合は、\texttt{detectPreset()} が \texttt{null} を返し、かんたんモード側では
+「どのプリセットとも一致していません」旨の案内を表示する。
+
 \subsection{ビルド・配布パイプライン}
 
 \begin{enumerate}[leftmargin=*,itemsep=2pt]

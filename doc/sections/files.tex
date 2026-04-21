@@ -18,10 +18,12 @@ font_to_bin/
 │   │   ├── encode.ts      … ビットパック・数値フォーマット
 │   │   ├── format.ts      … 言語別出力文字列生成
 │   │   ├── share.ts       … URLクエリパラメータ共有
+│   │   ├── presets.ts     … 用途別プリセット(FormatOptions雛形)
 │   │   └── defaults.ts    … 既定値
 │   ├── components/
 │   │   ├── ui/            … shadcn/ui プリミティブ群
 │   │   ├── Header.tsx
+│   │   ├── EasyPanel.tsx  … かんたんモード(3ステップ)
 │   │   ├── InputPanel.tsx
 │   │   ├── FormatPanel.tsx
 │   │   ├── PreviewPanel.tsx
@@ -32,6 +34,7 @@ font_to_bin/
 │   │   ├── useAppState.ts … useReducer ラッパ
 │   │   ├── useGlyphs.ts   … メモ化ラスタライザ
 │   │   ├── usePersist.ts  … LocalStorage自動保存
+│   │   ├── useMode.ts     … かんたん/詳細モード切替
 │   │   └── useTheme.ts    … ダーク/ライト
 │   ├── lib/utils.ts       … cn() ヘルパ
 │   ├── App.tsx            … 3カラムレイアウト + モーダル制御
@@ -71,6 +74,11 @@ font_to_bin/
   \item \texttt{src/core/share.ts}\,---\,\texttt{encodeStateToURL}
         / \texttt{decodeStateFromURL}。
         \texttt{AppState} を base64url 化して \texttt{?s=...} に載せる。
+  \item \texttt{src/core/presets.ts}\,---\,\texttt{PRESETS} 配列
+        （Arduino/C言語, C言語2D, Python リスト, MicroPython bytes,
+        JSON, 記号アートの6種）と \texttt{detectPreset()}
+        （現在の \texttt{FormatOptions} から該当プリセットIDを推定）。
+        かんたんモードでワンタッチ切替に使用。
   \item \texttt{src/core/defaults.ts}\,---\,\texttt{DEFAULT\_STATE}
         （text=\texttt{"ABC"}, fontId=\texttt{dotgothic16},
         16$\times$16, threshold=128）。
@@ -86,6 +94,8 @@ font_to_bin/
         変更時のみ再ラスタライズするメモ化。overrides をマージ。
   \item \texttt{src/hooks/usePersist.ts}\,---\,LocalStorage キー
         \texttt{font-to-bin.state.v1}。
+  \item \texttt{src/hooks/useMode.ts}\,---\,かんたん/詳細モード切替。
+        LocalStorage キー \texttt{font\_to\_bin\_mode\_v1}。
   \item \texttt{src/hooks/useTheme.ts}\,---\,light / dark 切替、
         \texttt{font-to-bin.theme} キー。
 \end{itemize}
@@ -94,9 +104,17 @@ font_to_bin/
 
 \begin{itemize}[leftmargin=*,itemsep=2pt]
   \item \texttt{src/components/Header.tsx}\,---\,タイトル、
-        テーマ切替、URL 共有、リセットボタン。
-  \item \texttt{src/components/InputPanel.tsx}\,---\,テキスト、
-        フォント選択、幅/高さ、描画オフセット、太字、閾値。
+        \textbf{かんたん/詳細モード切替}のセグメントタブ、
+        テーマ切替、URL 共有、GitHub リンク。
+  \item \texttt{src/components/EasyPanel.tsx}\,---\,
+        かんたんモード用の3ステップUI。
+        \textbf{ステップ1}: 変換したい文字。
+        \textbf{ステップ2}: フォント + ドットサイズクイックボタン
+        (8/12/16/24/32px) + 太字トグル。
+        \textbf{ステップ3}: 用途プリセットを6種から1クリック選択
+        （\texttt{presets.ts} の \texttt{PRESETS} を使用）。
+  \item \texttt{src/components/InputPanel.tsx}\,---\,詳細モードの左上。
+        テキスト、フォント選択、幅/高さ、描画オフセット、太字、閾値。
   \item \texttt{src/components/FormatPanel.tsx}\,---\,出力言語、
         構造、基数、MSB/LSB、0/1 反転、変数名、データ型。
   \item \texttt{src/components/PreviewPanel.tsx}\,---\,グリフ一覧。

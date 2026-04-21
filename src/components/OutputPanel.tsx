@@ -57,7 +57,7 @@ export function OutputPanel({ glyphs, format }: Props) {
       </CardHeader>
       <CardContent className="flex-1 min-h-0">
         <pre className="h-full max-h-[calc(100vh-20rem)] min-h-[300px] overflow-auto rounded-md bg-[#0b1221] text-[#e6edf3] p-4 text-xs font-mono leading-relaxed scrollbar-thin">
-          <code>{text || "// 入力があるとここに出力されます"}</code>
+          <code>{text || "// 文字を入力するとここにコードが生成されます\n// コピーボタンでそのまま使えます"}</code>
         </pre>
       </CardContent>
     </Card>

@@ -37,9 +37,10 @@ export function PreviewPanel({
       </CardHeader>
       <CardContent>
         {glyphs.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">
-            文字を入力してください
-          </p>
+          <div className="flex flex-col items-center gap-2 py-12 text-center text-sm text-muted-foreground">
+            <div className="text-3xl" aria-hidden>✨</div>
+            <p>左の「変換したい文字」に入力するとここにドット絵が表示されます</p>
+          </div>
         ) : (
           <div className="flex flex-wrap gap-3 justify-center">
             {glyphs.map((g, i) => (

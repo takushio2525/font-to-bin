@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/Header";
 import { InputPanel } from "@/components/InputPanel";
 import { FormatPanel } from "@/components/FormatPanel";
+import { EasyPanel } from "@/components/EasyPanel";
 import { PreviewPanel } from "@/components/PreviewPanel";
 import { OutputPanel } from "@/components/OutputPanel";
 import { PixelEditor } from "@/components/PixelEditor";
@@ -10,6 +11,7 @@ import type { FontDef } from "@/core/types";
 import { useAppState } from "@/hooks/useAppState";
 import { useGlyphs } from "@/hooks/useGlyphs";
 import { useTheme } from "@/hooks/useTheme";
+import { useMode } from "@/hooks/useMode";
 import { persistedInitial, usePersist } from "@/hooks/usePersist";
 import { DEFAULT_STATE } from "@/core/defaults";
 import { shareUrlToState, stateToShareUrl } from "@/core/share";
@@ -24,6 +26,7 @@ export default function App() {
   const { glyphs } = useGlyphs(state, fonts);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const { theme, toggle } = useTheme();
+  const { mode, setMode } = useMode();
 
   // 共有URLから起動したときは、適用後にURLをクリーンにする（履歴には残さない）
   useEffect(() => {
@@ -55,6 +58,8 @@ export default function App() {
       <Header
         theme={theme}
         onToggleTheme={toggle}
+        mode={mode}
+        onModeChange={setMode}
         onShare={async () => {
           const url = stateToShareUrl(state);
           try {
@@ -67,16 +72,45 @@ export default function App() {
       />
 
       <main className="flex-1 container mx-auto px-4 py-6">
+        {mode === "easy" ? (
+          <div className="mb-4 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5 text-sm">
+            <span className="font-semibold">かんたんモード</span>
+            <span className="text-muted-foreground">
+              {" "}
+              — 3ステップでバイナリ化できます。細かく調整したい場合は右上の「詳細」へ
+            </span>
+          </div>
+        ) : (
+          <div className="mb-4 rounded-lg border bg-card px-4 py-2.5 text-sm">
+            <span className="font-semibold">詳細モード</span>
+            <span className="text-muted-foreground">
+              {" "}
+              — すべての設定を直接編集できます。迷ったら右上の「かんたん」へ
+            </span>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {/* 左カラム: 入力 + フォーマット設定 */}
+          {/* 左カラム: モードに応じて切替 */}
           <div className="lg:col-span-4 space-y-4">
-            <InputPanel
-              state={state}
-              dispatch={dispatch}
-              fonts={fonts}
-              onCustomFontSelected={handleCustomFont}
-            />
-            <FormatPanel state={state} dispatch={dispatch} />
+            {mode === "easy" ? (
+              <EasyPanel
+                state={state}
+                dispatch={dispatch}
+                fonts={fonts}
+                onCustomFontSelected={handleCustomFont}
+              />
+            ) : (
+              <>
+                <InputPanel
+                  state={state}
+                  dispatch={dispatch}
+                  fonts={fonts}
+                  onCustomFontSelected={handleCustomFont}
+                />
+                <FormatPanel state={state} dispatch={dispatch} />
+              </>
+            )}
           </div>
 
           {/* 中央カラム: プレビュー */}
@@ -102,7 +136,7 @@ export default function App() {
           Built with React + Vite · Fonts: DotGothic16, Misaki Gothic 2nd ·
           <a
             className="ml-1 underline hover:text-foreground"
-            href="https://github.com/TakumiShiozawa/font_to_bin"
+            href="https://github.com/takushio2525/font_to_bin"
             target="_blank"
             rel="noopener noreferrer"
           >
