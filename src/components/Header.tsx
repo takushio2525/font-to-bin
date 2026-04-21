@@ -10,6 +10,12 @@ type Props = {
   onModeChange: (m: Mode) => void;
 };
 
+const MODES: { id: Mode; label: string; hint: string }[] = [
+  { id: "easy", label: "かんたん", hint: "3ステップで即バイナリ化" },
+  { id: "advanced", label: "詳細", hint: "すべての設定を直接編集" },
+  { id: "free", label: "自由", hint: "任意サイズで自由にドット絵を描画" },
+];
+
 export function Header({ theme, onToggleTheme, onShare, mode, onModeChange }: Props) {
   return (
     <header className="border-b bg-card/50 backdrop-blur sticky top-0 z-30">
@@ -37,48 +43,44 @@ export function Header({ theme, onToggleTheme, onShare, mode, onModeChange }: Pr
           </div>
         </div>
 
-        {/* モード切替セグメント */}
+        {/* モード切替セグメント（3モード） */}
         <div
           role="tablist"
           aria-label="表示モード"
-          className="hidden sm:inline-flex h-9 items-center rounded-lg bg-muted p-1 text-sm"
+          className="hidden md:inline-flex h-9 items-center rounded-lg bg-muted p-1 text-sm"
         >
-          <button
-            role="tab"
-            aria-selected={mode === "easy"}
-            onClick={() => onModeChange("easy")}
-            className={
-              "px-3 h-7 rounded-md font-medium transition-colors " +
-              (mode === "easy"
-                ? "bg-background text-foreground shadow"
-                : "text-muted-foreground hover:text-foreground")
-            }
-          >
-            かんたん
-          </button>
-          <button
-            role="tab"
-            aria-selected={mode === "advanced"}
-            onClick={() => onModeChange("advanced")}
-            className={
-              "px-3 h-7 rounded-md font-medium transition-colors " +
-              (mode === "advanced"
-                ? "bg-background text-foreground shadow"
-                : "text-muted-foreground hover:text-foreground")
-            }
-          >
-            詳細
-          </button>
+          {MODES.map((m) => (
+            <button
+              key={m.id}
+              role="tab"
+              aria-selected={mode === m.id}
+              onClick={() => onModeChange(m.id)}
+              title={m.hint}
+              className={
+                "px-3 h-7 rounded-md font-medium transition-colors " +
+                (mode === m.id
+                  ? "bg-background text-foreground shadow"
+                  : "text-muted-foreground hover:text-foreground")
+              }
+            >
+              {m.label}
+            </button>
+          ))}
         </div>
 
         <div className="flex items-center gap-1">
           {/* モバイル用のコンパクトなモード切替 */}
-          <button
-            className="sm:hidden mr-1 rounded-md border px-2 h-8 text-xs"
-            onClick={() => onModeChange(mode === "easy" ? "advanced" : "easy")}
+          <select
+            className="md:hidden mr-1 rounded-md border bg-background px-2 h-8 text-xs"
+            value={mode}
+            onChange={(e) => onModeChange(e.target.value as Mode)}
           >
-            {mode === "easy" ? "かんたん" : "詳細"}
-          </button>
+            {MODES.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.label}
+              </option>
+            ))}
+          </select>
           <Button
             variant="ghost"
             size="icon"

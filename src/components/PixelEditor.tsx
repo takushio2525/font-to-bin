@@ -26,6 +26,12 @@ export function PixelEditor({ glyph, index, onClose, onSave, onReset }: Props) {
     if (w <= 32) return 14;
     return 10;
   });
+  const [gridStep, setGridStep] = useState<number>(() => {
+    const w = glyph.width;
+    if (w <= 8) return 4;
+    if (w <= 16) return 8;
+    return 8;
+  });
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const draggingRef = useRef<{ mode: 0 | 1 | null }>({ mode: null });
 
@@ -56,7 +62,7 @@ export function PixelEditor({ glyph, index, onClose, onSave, onReset }: Props) {
       }
     }
 
-    // グリッド
+    // 細グリッド
     ctx.strokeStyle = "rgba(255,255,255,0.1)";
     ctx.lineWidth = 1;
     for (let x = 0; x <= w; x++) {
@@ -71,7 +77,25 @@ export function PixelEditor({ glyph, index, onClose, onSave, onReset }: Props) {
       ctx.lineTo(w * scale, y * scale + 0.5);
       ctx.stroke();
     }
-  }, [matrix, glyph, scale]);
+
+    // Nドット毎の強調線（ブロック境界）
+    if (gridStep > 0) {
+      ctx.strokeStyle = "rgba(46,134,193,0.7)";
+      ctx.lineWidth = 1.5;
+      for (let x = 0; x <= w; x += gridStep) {
+        ctx.beginPath();
+        ctx.moveTo(x * scale + 0.5, 0);
+        ctx.lineTo(x * scale + 0.5, h * scale);
+        ctx.stroke();
+      }
+      for (let y = 0; y <= h; y += gridStep) {
+        ctx.beginPath();
+        ctx.moveTo(0, y * scale + 0.5);
+        ctx.lineTo(w * scale, y * scale + 0.5);
+        ctx.stroke();
+      }
+    }
+  }, [matrix, glyph, scale, gridStep]);
 
   const getCell = (e: React.MouseEvent) => {
     const canvas = canvasRef.current;
@@ -179,17 +203,35 @@ export function PixelEditor({ glyph, index, onClose, onSave, onReset }: Props) {
           <Button variant="ghost" size="sm" onClick={onFlipV} title="上下反転"><FlipVertical className="h-3.5 w-3.5" /></Button>
           <Button variant="ghost" size="sm" onClick={onRotate} title="90度回転（正方形のみ）"><RotateCw className="h-3.5 w-3.5" /></Button>
           <Button variant="ghost" size="sm" onClick={onClear}>クリア</Button>
-          <div className="ml-auto flex items-center gap-2">
-            <label className="text-xs text-muted-foreground">拡大</label>
-            <input
-              type="range"
-              min={6}
-              max={48}
-              value={scale}
-              onChange={(e) => setScale(parseInt(e.target.value))}
-              className="w-28"
-            />
-            <span className="text-xs w-10 text-right">{scale}px</span>
+          <div className="ml-auto flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs text-muted-foreground">補助線</label>
+              <select
+                value={gridStep}
+                onChange={(e) => setGridStep(parseInt(e.target.value))}
+                className="h-7 rounded border bg-background px-1.5 text-xs"
+                title="Nドット毎にブロック境界線を強調"
+              >
+                <option value={0}>なし</option>
+                <option value={2}>2px</option>
+                <option value={4}>4px</option>
+                <option value={8}>8px</option>
+                <option value={16}>16px</option>
+                <option value={32}>32px</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-muted-foreground">拡大</label>
+              <input
+                type="range"
+                min={6}
+                max={48}
+                value={scale}
+                onChange={(e) => setScale(parseInt(e.target.value))}
+                className="w-24"
+              />
+              <span className="text-xs w-10 text-right">{scale}px</span>
+            </div>
           </div>
         </div>
 

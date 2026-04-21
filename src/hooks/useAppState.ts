@@ -1,5 +1,5 @@
 import { useReducer } from "react";
-import type { AppState, FormatOptions, Matrix } from "@/core/types";
+import type { AppState, FormatOptions, Matrix, Bit } from "@/core/types";
 import { DEFAULT_STATE } from "@/core/defaults";
 
 export type Action =
@@ -18,7 +18,36 @@ export type Action =
   | { type: "setOverride"; index: number; matrix: Matrix }
   | { type: "clearOverride"; index: number }
   | { type: "clearAllOverrides" }
+  | { type: "setPreviewGridStep"; value: number }
+  | { type: "setFreeSize"; width: number; height: number }
+  | { type: "setFreeMatrix"; matrix: Matrix }
+  | { type: "setFreePixel"; x: number; y: number; value: Bit }
+  | { type: "setFreeGridStep"; value: number }
+  | { type: "clearFree" }
   | { type: "replaceState"; state: AppState };
+
+// キャンバスサイズ変更時に既存のmatrixをリサイズする（切り詰め/ゼロ埋め）
+function resizeMatrix(src: Matrix, w: number, h: number): Matrix {
+  const next: Matrix = [];
+  for (let y = 0; y < h; y++) {
+    const row: Bit[] = [];
+    for (let x = 0; x < w; x++) {
+      row.push(src[y]?.[x] ?? 0);
+    }
+    next.push(row);
+  }
+  return next;
+}
+
+function emptyMatrix(w: number, h: number): Matrix {
+  const m: Matrix = [];
+  for (let y = 0; y < h; y++) {
+    const row: Bit[] = [];
+    for (let x = 0; x < w; x++) row.push(0);
+    m.push(row);
+  }
+  return m;
+}
 
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
@@ -65,6 +94,54 @@ function reducer(state: AppState, action: Action): AppState {
     }
     case "clearAllOverrides":
       return { ...state, overrides: {} };
+    case "setPreviewGridStep":
+      return { ...state, previewGridStep: Math.max(0, Math.floor(action.value)) };
+    case "setFreeSize": {
+      const w = Math.max(1, Math.min(256, Math.floor(action.width)));
+      const h = Math.max(1, Math.min(256, Math.floor(action.height)));
+      return {
+        ...state,
+        free: {
+          ...state.free,
+          width: w,
+          height: h,
+          matrix: resizeMatrix(state.free.matrix, w, h),
+        },
+      };
+    }
+    case "setFreeMatrix":
+      return { ...state, free: { ...state.free, matrix: action.matrix } };
+    case "setFreePixel": {
+      const { x, y, value } = action;
+      if (
+        y < 0 ||
+        y >= state.free.height ||
+        x < 0 ||
+        x >= state.free.width
+      ) {
+        return state;
+      }
+      if (state.free.matrix[y][x] === value) return state;
+      const nextMatrix = state.free.matrix.map((row, ry) =>
+        ry === y
+          ? (row.map((b, rx) => (rx === x ? value : b)) as Matrix[number])
+          : row
+      );
+      return { ...state, free: { ...state.free, matrix: nextMatrix } };
+    }
+    case "setFreeGridStep":
+      return {
+        ...state,
+        free: { ...state.free, gridStep: Math.max(0, Math.floor(action.value)) },
+      };
+    case "clearFree":
+      return {
+        ...state,
+        free: {
+          ...state.free,
+          matrix: emptyMatrix(state.free.width, state.free.height),
+        },
+      };
     case "replaceState":
       return action.state;
     default:

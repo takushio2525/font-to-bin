@@ -22,6 +22,21 @@ type AppState = {
   bold: boolean;
   format: FormatOptions;
   overrides: Record<number, Matrix>; // charIndex→手動編集結果
+  previewGridStep: number;           // プレビュー補助線間隔(0で無効)
+  free: FreeCanvasState;             // 自由モードのキャンバス
+};
+\end{lstlisting}
+\end{apibox}
+
+\begin{apibox}{FreeCanvasState}
+自由モードで編集中のキャンバス状態。1--256 px 角までサポートする。
+
+\begin{lstlisting}
+type FreeCanvasState = {
+  width: number;      // 1..256
+  height: number;     // 1..256
+  matrix: Matrix;     // matrix[row][col] の Bit 配列
+  gridStep: number;   // Nドット毎の強調補助線 (0で無効)
 };
 \end{lstlisting}
 \end{apibox}
@@ -157,7 +172,14 @@ JSON エクスポート機能（\texttt{OutputPanel} のダウンロード）を
 \texttt{setWidth}, \texttt{setHeight}, \texttt{setFontSize},
 \texttt{setThreshold}, \texttt{setOffsetX}, \texttt{setOffsetY},
 \texttt{setBold}, \texttt{setFormat}, \texttt{setOverride},
-\texttt{clearOverride}, \texttt{clearAllOverrides}, \texttt{replaceState}。
+\texttt{clearOverride}, \texttt{clearAllOverrides},
+\texttt{setPreviewGridStep},
+\texttt{setFreeSize}, \texttt{setFreeMatrix}, \texttt{setFreePixel},
+\texttt{setFreeGridStep}, \texttt{clearFree},
+\texttt{replaceState}。
+\texttt{setFreePixel} は \texttt{(x, y, value)} を取る 1 セル単位の
+原子更新であり、マウスドラッグ描画中の\texttt{stale closure}による
+取り零しを避けるために用いる。
 \end{funcblock}
 
 \begin{funcblock}{useGlyphs(state: AppState): Glyph[]}

@@ -5,6 +5,7 @@ type Props = {
   glyph: Glyph;
   scale?: number;       // 1ドットのピクセル数
   grid?: boolean;       // グリッド表示
+  gridStep?: number;    // Nドット毎に太めの強調線を引く（0で無効）
   onClick?: () => void;
   label?: string;
 };
@@ -14,6 +15,7 @@ export function GlyphPreview({
   glyph,
   scale = 8,
   grid = true,
+  gridStep = 0,
   onClick,
   label,
 }: Props) {
@@ -44,7 +46,7 @@ export function GlyphPreview({
       }
     }
 
-    // グリッド
+    // 細グリッド
     if (grid && scale >= 4) {
       ctx.strokeStyle = "rgba(255,255,255,0.08)";
       ctx.lineWidth = 1;
@@ -61,7 +63,25 @@ export function GlyphPreview({
         ctx.stroke();
       }
     }
-  }, [glyph, scale, grid]);
+
+    // Nドット毎の強調線（ブロック境界）
+    if (gridStep > 0 && scale >= 3) {
+      ctx.strokeStyle = "rgba(46,134,193,0.55)";
+      ctx.lineWidth = 1.5;
+      for (let x = 0; x <= w; x += gridStep) {
+        ctx.beginPath();
+        ctx.moveTo(x * scale + 0.5, 0);
+        ctx.lineTo(x * scale + 0.5, h * scale);
+        ctx.stroke();
+      }
+      for (let y = 0; y <= h; y += gridStep) {
+        ctx.beginPath();
+        ctx.moveTo(0, y * scale + 0.5);
+        ctx.lineTo(w * scale, y * scale + 0.5);
+        ctx.stroke();
+      }
+    }
+  }, [glyph, scale, grid, gridStep]);
 
   return (
     <div

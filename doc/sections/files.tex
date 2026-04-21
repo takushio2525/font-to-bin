@@ -23,13 +23,14 @@ font_to_bin/
 │   ├── components/
 │   │   ├── ui/            … shadcn/ui プリミティブ群
 │   │   ├── Header.tsx
-│   │   ├── EasyPanel.tsx  … かんたんモード(3ステップ)
+│   │   ├── EasyPanel.tsx        … かんたんモード(3ステップ)
 │   │   ├── InputPanel.tsx
 │   │   ├── FormatPanel.tsx
-│   │   ├── PreviewPanel.tsx
-│   │   ├── GlyphPreview.tsx
+│   │   ├── PreviewPanel.tsx     … 横スクロール帯プレビュー
+│   │   ├── GlyphPreview.tsx     … 補助線対応のグリフ描画
 │   │   ├── OutputPanel.tsx
-│   │   └── PixelEditor.tsx
+│   │   ├── PixelEditor.tsx
+│   │   └── FreeCanvasPanel.tsx  … 自由モードのキャンバス
 │   ├── hooks/
 │   │   ├── useAppState.ts … useReducer ラッパ
 │   │   ├── useGlyphs.ts   … メモ化ラスタライザ
@@ -89,13 +90,18 @@ font_to_bin/
 \begin{itemize}[leftmargin=*,itemsep=2pt]
   \item \texttt{src/hooks/useAppState.ts}\,---\,\texttt{useReducer}。
         Action は \texttt{setText}, \texttt{setSize},
-        \texttt{setFormat}, \texttt{setOverride} など。
+        \texttt{setFormat}, \texttt{setOverride} のほか、
+        プレビュー補助線用 \texttt{setPreviewGridStep}、
+        自由モード用 \texttt{setFreeSize} / \texttt{setFreeMatrix} /
+        \texttt{setFreePixel} / \texttt{setFreeGridStep} /
+        \texttt{clearFree} を提供する。
   \item \texttt{src/hooks/useGlyphs.ts}\,---\,text / font / size
         変更時のみ再ラスタライズするメモ化。overrides をマージ。
   \item \texttt{src/hooks/usePersist.ts}\,---\,LocalStorage キー
         \texttt{font-to-bin.state.v1}。
-  \item \texttt{src/hooks/useMode.ts}\,---\,かんたん/詳細モード切替。
-        LocalStorage キー \texttt{font\_to\_bin\_mode\_v1}。
+  \item \texttt{src/hooks/useMode.ts}\,---\,かんたん/詳細/自由モード切替。
+        LocalStorage キー \texttt{font\_to\_bin\_mode\_v1}。値は
+        \texttt{easy} / \texttt{advanced} / \texttt{free} のいずれか。
   \item \texttt{src/hooks/useTheme.ts}\,---\,light / dark 切替、
         \texttt{font-to-bin.theme} キー。
 \end{itemize}
@@ -117,14 +123,24 @@ font_to_bin/
         テキスト、フォント選択、幅/高さ、描画オフセット、太字、閾値。
   \item \texttt{src/components/FormatPanel.tsx}\,---\,出力言語、
         構造、基数、MSB/LSB、0/1 反転、変数名、データ型。
-  \item \texttt{src/components/PreviewPanel.tsx}\,---\,グリフ一覧。
-        クリックでピクセルエディタを開く。
+  \item \texttt{src/components/PreviewPanel.tsx}\,---\,グリフ一覧を
+        \textbf{横スクロール帯}で表示。補助線間隔セレクタ、
+        ズーム（50--400\%）を備える。
+        文字クリックでピクセルエディタを開く。
   \item \texttt{src/components/GlyphPreview.tsx}\,---\,単一グリフの
-        SVG タイル描画。
+        Canvas タイル描画。\texttt{gridStep} プロパティで N ドット毎の
+        強調補助線を描画。
   \item \texttt{src/components/OutputPanel.tsx}\,---\,生成結果の
         表示 + コピー + ダウンロード。
   \item \texttt{src/components/PixelEditor.tsx}\,---\,モーダル。
-        ペン/消しゴム/トグル/反転/回転/クリア/ズーム。
+        ペン/消しゴム/トグル/反転/回転/クリア/ズームに加え、
+        補助線間隔の切替に対応。
+  \item \texttt{src/components/FreeCanvasPanel.tsx}\,---\,自由モード専用。
+        W$\times$H(1--256)指定、スクロール可能なキャンバス、補助線、
+        ズーム、ペン／消しゴム／トグル、反転・回転・全消去。
+        編集結果は \texttt{AppState.free.matrix} に
+        \texttt{setFreePixel}（1セル単位）で反映され、
+        出力側では単一グリフとして扱う。
   \item \texttt{src/components/ui/}\,---\,Radix UI ベースの
         shadcn/ui 汎用プリミティブ群。
 \end{itemize}

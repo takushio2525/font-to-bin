@@ -72,6 +72,15 @@ export type FormatOptions = {
   suffix: string;          // 末尾に挿入
 };
 
+// 自由キャンバス（自由モード用）の状態
+export type FreeCanvasState = {
+  width: number;
+  height: number;
+  matrix: Matrix;
+  // 補助線を何ドット毎に強調するか（0 で無効）
+  gridStep: number;
+};
+
 export type AppState = {
   text: string;
   fontId: string;
@@ -85,4 +94,8 @@ export type AppState = {
   format: FormatOptions;
   // ピクセルエディタの上書き: charIndex -> override matrix
   overrides: Record<number, Matrix>;
+  // プレビュー表示時の補助線間隔（0 で無効）
+  previewGridStep: number;
+  // 自由モードのキャンバス
+  free: FreeCanvasState;
 };

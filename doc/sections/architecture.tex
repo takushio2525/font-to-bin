@@ -59,20 +59,37 @@
         LocalStorage に書き戻す（\texttt{overrides} を除く）。
 \end{enumerate}
 
+\subsection{画面レイアウト}
+
+画面は上段と下段の 2 セクションで構成される。上段はプレビュー
+（または自由キャンバス）を幅いっぱいに配置し、横スクロールで
+大きな文字列や高解像度キャンバスを一望できるようにする。
+下段は 12 カラムグリッドの 5/7 分割で、左に設定パネル、
+右に生成コードパネルを並べる。
+
 \subsection{UI モード切替}
 
-初心者と上級者の双方をカバーするため、左カラムのコンテンツを
+初心者・上級者・自由描画という 3 つのユースケースをカバーするため、
+上段コンテンツと下段の設定カラムのコンテンツを
 \texttt{useMode}（\texttt{font\_to\_bin\_mode\_v1} キーで LocalStorage 永続化）
 の値で切り替える。
 
-\begin{tabularx}{\textwidth}{l X}
+\begin{tabularx}{\textwidth}{l X X}
 \toprule
-\textbf{モード} & \textbf{左カラムに表示されるコンポーネント} \\
+\textbf{モード} & \textbf{上段} & \textbf{下段・設定カラム} \\
 \midrule
-\texttt{easy} & \texttt{EasyPanel}（3ステップ: 文字 → 見た目 → 用途プリセット）\\
-\texttt{advanced} & \texttt{InputPanel} + \texttt{FormatPanel}（現行の全設定）\\
+\texttt{easy} & \texttt{PreviewPanel}（横スクロール） & \texttt{EasyPanel}（3ステップ: 文字 → 見た目 → 用途プリセット）\\
+\texttt{advanced} & \texttt{PreviewPanel}（横スクロール） & \texttt{InputPanel} + \texttt{FormatPanel}（全設定）\\
+\texttt{free} & \texttt{FreeCanvasPanel}（自由描画キャンバス） & \texttt{FormatPanel}（出力設定のみ）\\
 \bottomrule
 \end{tabularx}
+
+\vspace{2mm}
+
+\texttt{free} モードでは、入力テキストに基づく \texttt{useGlyphs} の結果ではなく、
+\texttt{AppState.free} が持つ単一マトリックスを 1 枚のグリフとして
+\texttt{OutputPanel} に渡す。これにより、テキスト由来のビットマップと
+ハンドドローのビットマップが同じ出力フォーマッタを共有する。
 
 \vspace{2mm}
 

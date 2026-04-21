@@ -6,8 +6,9 @@ import { EasyPanel } from "@/components/EasyPanel";
 import { PreviewPanel } from "@/components/PreviewPanel";
 import { OutputPanel } from "@/components/OutputPanel";
 import { PixelEditor } from "@/components/PixelEditor";
+import { FreeCanvasPanel } from "@/components/FreeCanvasPanel";
 import { BUILTIN_FONTS, registerCustomFont } from "@/core/fonts";
-import type { FontDef } from "@/core/types";
+import type { FontDef, Glyph } from "@/core/types";
 import { useAppState } from "@/hooks/useAppState";
 import { useGlyphs } from "@/hooks/useGlyphs";
 import { useTheme } from "@/hooks/useTheme";
@@ -17,7 +18,6 @@ import { DEFAULT_STATE } from "@/core/defaults";
 import { shareUrlToState, stateToShareUrl } from "@/core/share";
 
 export default function App() {
-  // 初期状態: 共有URL優先 > LocalStorage > デフォルト
   const [state, dispatch] = useAppState(
     shareUrlToState() ?? persistedInitial(DEFAULT_STATE)
   );
@@ -28,7 +28,6 @@ export default function App() {
   const { theme, toggle } = useTheme();
   const { mode, setMode } = useMode();
 
-  // 共有URLから起動したときは、適用後にURLをクリーンにする（履歴には残さない）
   useEffect(() => {
     if (new URL(window.location.href).searchParams.has("s")) {
       const u = new URL(window.location.href);
@@ -53,6 +52,18 @@ export default function App() {
     }
   };
 
+  // 自由モード時はキャンバスを1枚のグリフとして扱って出力に流し込む
+  const freeGlyph: Glyph = useMemo(
+    () => ({
+      char: "free",
+      width: state.free.width,
+      height: state.free.height,
+      matrix: state.free.matrix,
+    }),
+    [state.free.width, state.free.height, state.free.matrix]
+  );
+  const outputGlyphs = mode === "free" ? [freeGlyph] : glyphs;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header
@@ -71,36 +82,43 @@ export default function App() {
         }}
       />
 
-      <main className="flex-1 container mx-auto px-4 py-6">
-        {mode === "easy" ? (
-          <div className="mb-4 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5 text-sm">
-            <span className="font-semibold">かんたんモード</span>
-            <span className="text-muted-foreground">
-              {" "}
-              — 3ステップでバイナリ化できます。細かく調整したい場合は右上の「詳細」へ
-            </span>
-          </div>
-        ) : (
-          <div className="mb-4 rounded-lg border bg-card px-4 py-2.5 text-sm">
-            <span className="font-semibold">詳細モード</span>
-            <span className="text-muted-foreground">
-              {" "}
-              — すべての設定を直接編集できます。迷ったら右上の「かんたん」へ
-            </span>
-          </div>
-        )}
+      <main className="flex-1 container mx-auto px-4 py-5 space-y-4">
+        {/* モードバナー */}
+        <ModeBanner mode={mode} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {/* 左カラム: モードに応じて切替 */}
-          <div className="lg:col-span-4 space-y-4">
-            {mode === "easy" ? (
+        {/* 上段: プレビュー or 自由キャンバス（全幅・横長） */}
+        <section>
+          {mode === "free" ? (
+            <FreeCanvasPanel free={state.free} dispatch={dispatch} />
+          ) : (
+            <PreviewPanel
+              glyphs={glyphs}
+              overriddenIndices={overriddenIndices}
+              onOpenEditor={setEditingIndex}
+              onClearAllOverrides={() =>
+                dispatch({ type: "clearAllOverrides" })
+              }
+              hasOverrides={Object.keys(state.overrides).length > 0}
+              gridStep={state.previewGridStep}
+              onGridStepChange={(v) =>
+                dispatch({ type: "setPreviewGridStep", value: v })
+              }
+            />
+          )}
+        </section>
+
+        {/* 下段: 左=設定 / 右=出力（コード） */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div className="lg:col-span-5 space-y-4">
+            {mode === "easy" && (
               <EasyPanel
                 state={state}
                 dispatch={dispatch}
                 fonts={fonts}
                 onCustomFontSelected={handleCustomFont}
               />
-            ) : (
+            )}
+            {mode === "advanced" && (
               <>
                 <InputPanel
                   state={state}
@@ -111,28 +129,16 @@ export default function App() {
                 <FormatPanel state={state} dispatch={dispatch} />
               </>
             )}
+            {mode === "free" && (
+              <FormatPanel state={state} dispatch={dispatch} />
+            )}
           </div>
-
-          {/* 中央カラム: プレビュー */}
-          <div className="lg:col-span-4">
-            <PreviewPanel
-              glyphs={glyphs}
-              overriddenIndices={overriddenIndices}
-              onOpenEditor={setEditingIndex}
-              onClearAllOverrides={() =>
-                dispatch({ type: "clearAllOverrides" })
-              }
-              hasOverrides={Object.keys(state.overrides).length > 0}
-            />
+          <div className="lg:col-span-7">
+            <OutputPanel glyphs={outputGlyphs} format={state.format} />
           </div>
+        </section>
 
-          {/* 右カラム: 出力 */}
-          <div className="lg:col-span-4">
-            <OutputPanel glyphs={glyphs} format={state.format} />
-          </div>
-        </div>
-
-        <footer className="mt-10 py-4 border-t text-center text-xs text-muted-foreground">
+        <footer className="mt-8 py-4 border-t text-center text-xs text-muted-foreground">
           Built with React + Vite · Fonts: DotGothic16, Misaki Gothic 2nd ·
           <a
             className="ml-1 underline hover:text-foreground"
@@ -159,6 +165,40 @@ export default function App() {
           }}
         />
       )}
+    </div>
+  );
+}
+
+function ModeBanner({ mode }: { mode: "easy" | "advanced" | "free" }) {
+  if (mode === "easy") {
+    return (
+      <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5 text-sm">
+        <span className="font-semibold">かんたんモード</span>
+        <span className="text-muted-foreground">
+          {" "}
+          — 3ステップでバイナリ化できます。細かく調整したい場合は右上の「詳細」へ
+        </span>
+      </div>
+    );
+  }
+  if (mode === "advanced") {
+    return (
+      <div className="rounded-lg border bg-card px-4 py-2.5 text-sm">
+        <span className="font-semibold">詳細モード</span>
+        <span className="text-muted-foreground">
+          {" "}
+          — すべての設定を直接編集できます。迷ったら右上の「かんたん」へ
+        </span>
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-lg border border-accent/40 bg-accent/10 px-4 py-2.5 text-sm">
+      <span className="font-semibold">自由モード</span>
+      <span className="text-muted-foreground">
+        {" "}
+        — 任意サイズのキャンバスに自由に描画できます。そのまま出力フォーマットに変換されます
+      </span>
     </div>
   );
 }

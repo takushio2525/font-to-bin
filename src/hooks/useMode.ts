@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 
-export type Mode = "easy" | "advanced";
+export type Mode = "easy" | "advanced" | "free";
 
 const KEY = "font_to_bin_mode_v1";
 
 function read(): Mode {
   try {
     const v = localStorage.getItem(KEY);
-    return v === "advanced" ? "advanced" : "easy";
+    if (v === "advanced" || v === "free") return v;
+    return "easy";
   } catch {
     return "easy";
   }
