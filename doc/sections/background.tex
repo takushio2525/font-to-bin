@@ -1,0 +1,58 @@
+\section{背景と課題}
+
+\subsection{旧Python/Tkinter版の課題}
+
+旧版（\texttt{font\_to\_binary\_GUI.py} / \texttt{font\_to\_binary\_CUI.py}）は
+Python + Tkinter で実装された小規模ユーティリティであった。
+一定の機能は果たしていたが、以下の課題があった。
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+  \item \textbf{配布の煩雑さ}: Python と関連ライブラリ（Pillow, tkinter）を
+        利用者がインストールする必要があった。
+  \item \textbf{UI/UXの制約}: Tkinter のネイティブウィジェットでは
+        近年の Web アプリのような細やかな表現ができず、
+        レイアウトやテーマ切替も貧弱であった。
+  \item \textbf{出力形式の限定}: C配列と一部の表記のみ対応しており、
+        言語切替、ビットパック、MSB/LSB、0/1反転などの
+        細かな設定ができなかった。
+  \item \textbf{ピクセル編集不可}: 生成後の手動補正ができず、
+        細かな調整をしたい場合は結果をコピーして手で書き換える必要があった。
+  \item \textbf{共有性}: 設定を他人に渡す手段がなく、
+        再現実験や共同作業に不向きであった。
+\end{itemize}
+
+\subsection{組み込み現場での典型的な需要}
+
+マイコン用ディスプレイ（OLED/LCD/LED マトリクス）への
+ドットフォント描画では、以下が繰り返し要求される。
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+  \item ターゲットマイコン・表示ドライバごとに異なる
+        バイト並び（行方向/列方向、MSB/LSB）への対応。
+  \item FLASH 節約のためのビットパック配列出力（1bit/pixel）。
+  \item \texttt{PROGMEM}, \texttt{const}, \texttt{static} 等の
+        言語・処理系依存修飾子の付与。
+  \item デザインを確認するためのプレビューと、
+        生成結果の部分修正。
+\end{itemize}
+
+これらを毎回手作業で行うのは非効率であり、
+\textbf{「設定をGUIで触り、結果をコピーするだけで済むツール」}
+が常に求められていた。
+
+\subsection{Webアプリ化の動機}
+
+これらの課題に対し、
+\textbf{クロスプラットフォームで即起動でき、機能拡張が容易で、
+URLで設定を共有できる}という要求を満たすため、
+Web アプリケーションとしての再実装を選択した。
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+  \item 利用者はブラウザを開くだけで利用可能（インストール不要）。
+  \item GitHub Pages による無料ホスティングで配布コスト \texttt{0}。
+  \item React + TypeScript により型安全に機能拡張が可能。
+  \item Canvas API + FontFace API によりフォントラスタライズを
+        サーバレスで実行可能。
+\end{itemize}
+
+\newpage

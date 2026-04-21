@@ -1,0 +1,173 @@
+\section{API 仕様}
+
+本章では \texttt{src/core/} が提供する公開 API と主要な型を示す。
+UI 層はこれらの関数・型にのみ依存し、DOM 操作は core 内の
+\texttt{rasterize.ts} に閉じ込められている。
+
+\subsection{型定義（types.ts）}
+
+\begin{apibox}{AppState}
+\texttt{AppState} は UI 全体の単一情報源であり、永続化・共有の単位でもある。
+
+\begin{lstlisting}
+type AppState = {
+  text: string;
+  fontId: string;
+  width: number;        // グリフ幅[px]
+  height: number;       // グリフ高さ[px]
+  size: number;         // 描画フォントサイズ[px]
+  threshold: number;    // 2値化閾値 0-255
+  offsetX: number;
+  offsetY: number;
+  bold: boolean;
+  format: FormatOptions;
+  overrides: Record<number, Matrix>; // charIndex→手動編集結果
+};
+\end{lstlisting}
+\end{apibox}
+
+\begin{apibox}{Glyph / Matrix}
+\begin{lstlisting}
+type Bit = 0 | 1;
+type Matrix = Bit[][]; // matrix[row][col]
+type Glyph = {
+  char: string;
+  width: number;
+  height: number;
+  matrix: Matrix;
+};
+\end{lstlisting}
+\end{apibox}
+
+\begin{apibox}{FormatOptions}
+\begin{lstlisting}
+type FormatOptions = {
+  language: OutputLanguage;  // c|cpp|arduino|python|...
+  structure: Structure;      // matrix2d|matrix3d|flat|bitpack-row|bitpack-col
+  dataType: string;          // "uint8_t" 等
+  bitOrder: BitOrder;        // "msb" | "lsb"
+  radix: Radix;              // "bin" | "hex" | "dec"
+  invert: boolean;
+  variableName: string;
+  itemsPerLine: number;
+  includeCharComment: boolean;
+  includeAsciiArt: boolean;
+  padByte: boolean;
+  indent: string;
+  prefix: string;
+  suffix: string;
+};
+\end{lstlisting}
+\end{apibox}
+
+\subsection{ラスタライズ（rasterize.ts）}
+
+\begin{funcblock}{rasterizeChar(char: string, opts: RasterizeOptions): Glyph}
+指定文字を Canvas に描画し、各ピクセルのアルファ値を
+\texttt{opts.threshold} で 2 値化して \texttt{Glyph} を返す。
+
+\apisection{引数}
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item \texttt{char}: 対象文字（1文字）。
+  \item \texttt{opts.fontFamily}: CSS の \texttt{font-family}。
+  \item \texttt{opts.width}, \texttt{opts.height}: 出力行列のサイズ。
+  \item \texttt{opts.size}: 描画フォントの \texttt{px} サイズ。
+  \item \texttt{opts.threshold}: $[0,255]$ のアルファ閾値。
+  \item \texttt{opts.offsetX}, \texttt{opts.offsetY}: 描画オフセット。
+  \item \texttt{opts.bold}: \texttt{true} で \texttt{bold} 書体。
+\end{itemize}
+
+\apisection{戻り値}
+\texttt{Glyph}。\texttt{matrix[row][col]} は 0/1 の \texttt{Bit}。
+\end{funcblock}
+
+\subsection{エンコード（encode.ts）}
+
+\begin{funcblock}{packRow(matrix: Matrix, bitOrder: BitOrder, padByte: boolean): number[]}
+\texttt{matrix} を行方向に走査して 1bit/pixel にパックする。
+\texttt{padByte=true} の場合、各行を 8bit 境界にゼロ埋めする。
+\end{funcblock}
+
+\begin{funcblock}{packColumn(matrix: Matrix, bitOrder: BitOrder, padByte: boolean): number[]}
+列方向パック版。OLED/LCD の「縦8ドット=1バイト」フォーマットに相当。
+\end{funcblock}
+
+\begin{funcblock}{formatNumber(n: number, radix: Radix, bitWidth: number): string}
+\texttt{n} を指定基数で文字列化する。\texttt{hex} は \texttt{0x} 接頭辞、
+\texttt{bin} は \texttt{0b} 接頭辞、\texttt{dec} は素の 10 進。
+\texttt{bitWidth} に応じて 0 埋めする。
+\end{funcblock}
+
+\subsection{フォーマット（format.ts）}
+
+\begin{funcblock}{formatOutput(glyphs: Glyph[], opts: FormatOptions): string}
+グリフ列とフォーマット設定から、ユーザーに表示する最終的な
+出力文字列を生成する。言語別に以下のヘルパへディスパッチする。
+
+\apisection{ディスパッチ先}
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item \texttt{formatC} (C / C++ / Arduino)
+  \item \texttt{formatPython}
+  \item \texttt{formatJS} (JavaScript / TypeScript)
+  \item \texttt{formatRust}
+  \item \texttt{formatGo}
+  \item \texttt{formatJSON}
+  \item \texttt{formatMarkdown}
+  \item \texttt{formatSymbols} (記号アート、\texttt{■/□})
+  \item \texttt{formatPlain} (生の 0/1 テキスト)
+\end{itemize}
+\end{funcblock}
+
+\subsection{フォント管理（fonts.ts）}
+
+\begin{funcblock}{loadFont(font: FontDef): Promise<void>}
+\texttt{FontDef.url} が指す TTF/OTF を \texttt{FontFace} で読み込み、
+\texttt{document.fonts} に登録する。同梱フォント用。
+\end{funcblock}
+
+\begin{funcblock}{registerCustomFont(file: File): Promise<FontDef>}
+ユーザーがアップロードした \texttt{File} を \texttt{FontFace} 経由で
+登録し、ID を付与した \texttt{FontDef} を返す。
+以降の \texttt{fontId} 指定で利用可能になる。
+\end{funcblock}
+
+\subsection{共有リンク（share.ts）}
+
+\begin{funcblock}{encodeStateToURL(state: AppState): string}
+\texttt{overrides} を除く \texttt{AppState} を JSON 化し、base64url で
+圧縮した文字列を \texttt{?s=} クエリに載せた URL を返す。
+\end{funcblock}
+
+\begin{funcblock}{decodeStateFromURL(): Partial<AppState> | null}
+現在の URL から \texttt{?s=} を読み出し、復元した \texttt{AppState} を返す。
+不正な値や欠損フィールドは無視し、欠けた箇所は既定値で補完される。
+\end{funcblock}
+
+\begin{notebox}[overrides を共有しない理由]
+ピクセル編集結果（\texttt{overrides}）はサイズが大きく URL に載せづらいため、
+共有リンクには含めない。共有先で再生成するか、
+JSON エクスポート機能（\texttt{OutputPanel} のダウンロード）を用いる。
+\end{notebox}
+
+\subsection{React Hooks}
+
+\begin{funcblock}{useAppState(initial: AppState): [AppState, Dispatch<Action>]}
+\texttt{useReducer} を用いた状態管理。サポートするアクション:
+\texttt{setText}, \texttt{setFontId}, \texttt{setSize},
+\texttt{setWidth}, \texttt{setHeight}, \texttt{setFontSize},
+\texttt{setThreshold}, \texttt{setOffsetX}, \texttt{setOffsetY},
+\texttt{setBold}, \texttt{setFormat}, \texttt{setOverride},
+\texttt{clearOverride}, \texttt{clearAllOverrides}, \texttt{replaceState}。
+\end{funcblock}
+
+\begin{funcblock}{useGlyphs(state: AppState): Glyph[]}
+\texttt{text}, \texttt{fontId}, 幾何パラメータ、\texttt{overrides}
+の変化にのみ反応して再計算するメモ化ラッパ。
+\end{funcblock}
+
+\begin{funcblock}{usePersist(state: AppState)}
+\texttt{AppState} を \texttt{localStorage["font-to-bin.state.v1"]} に
+自動保存する副作用フック。\texttt{overrides} は除外する。
+\end{funcblock}
+
+\newpage

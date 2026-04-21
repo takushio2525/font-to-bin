@@ -1,47 +1,95 @@
 # Font to Binary Converter
 
-指定した文字や文字列を、ドットフォントを使ってバイナリ（0/1）の配列に変換するツールです。
-GUI版とCUI版の2つのスクリプトを提供しており、お使いの環境に合わせて実行できます。
+ドットフォントを任意のバイナリ配列に変換する Web ツール。
+ブラウザだけで動作し、インストール不要。GitHub Pages で公開されています。
 
----
+**▶ 公開URL:** <https://takumishiozawa.github.io/font_to_bin/>
 
-## 💻 デスクトップ環境（GUI版）
+## 特徴
 
-GUI（グラフィカル・ユーザー・インターフェース）を備えたバージョンです。直感的な操作が可能です。
+- **同梱フォント**: DotGothic16 (16×16)、Misaki Gothic 2nd (8×8)
+- **ユーザー TTF/OTF アップロード**: 任意のフォントをその場で追加可能
+- **サイズ自由**: 幅・高さ独立指定、4〜64px
+- **出力言語**: C / C++ / Arduino(PROGMEM) / Python / JavaScript / TypeScript / Rust / Go / JSON / Markdown / プレーン / 記号アート
+- **出力形式**: 2次元 / 3次元 / フラット / ビットパック（行方向・列方向）
+- **表記**: 10進 / 16進(0x) / 2進(0b)、MSB/LSB、0/1反転
+- **ピクセルエディタ**: 各文字をクリックで手動編集（ペン・消しゴム・反転・回転・ミラー）
+- **設定の保存・共有**: LocalStorage 自動保存 + URL共有ボタン
+- **ダーク/ライトテーマ**、レスポンシブ、PWA manifest 同梱
 
-### 実行方法
+## 開発環境
 
-1.  **必要なライブラリをインストールします。**
-    このアプリケーションはPillowライブラリに依存しています。ターミナルで以下のコマンドを実行して、必要なライブラリをインストールしてください。
+### 必要なもの
 
-    ```bash
-    pip install -r requirements.txt
-    ```
+- Node.js 20 以上
+- npm
 
-2.  **スクリプトを実行します。**
-    ターミナルで以下のコマンドを実行すると、GUIウィンドウが起動します。
+### セットアップ
 
-    ```bash
-    python font_to_binary_GUI.py
-    ```
+```bash
+npm install
+npm run dev       # ローカル開発サーバ (http://localhost:5173)
+npm run build     # 本番ビルド (dist/)
+npm run preview   # 本番ビルドのプレビュー
+```
 
-### ⚠️ 注意点
-- `font_to_binary_GUI.py` と同じ階層に、フォントファイル (`DotGothic16-Regular.ttf`, `misaki_gothic_2nd.ttf`) を配置する必要があります。
+### プロジェクト構成
 
----
+```
+.
+├── public/
+│   ├── fonts/            ← 同梱TTFフォント
+│   ├── favicon.svg
+│   └── manifest.webmanifest
+├── src/
+│   ├── core/             ← ラスタライズ・エンコード・フォーマッタ
+│   │   ├── types.ts
+│   │   ├── fonts.ts
+│   │   ├── rasterize.ts
+│   │   ├── encode.ts
+│   │   ├── format.ts
+│   │   ├── share.ts
+│   │   └── defaults.ts
+│   ├── components/       ← UIコンポーネント
+│   │   ├── ui/           ← shadcn/ui 系プリミティブ
+│   │   ├── Header.tsx
+│   │   ├── InputPanel.tsx
+│   │   ├── FormatPanel.tsx
+│   │   ├── PreviewPanel.tsx
+│   │   ├── GlyphPreview.tsx
+│   │   ├── OutputPanel.tsx
+│   │   └── PixelEditor.tsx
+│   ├── hooks/
+│   │   ├── useAppState.ts
+│   │   ├── useGlyphs.ts
+│   │   ├── usePersist.ts
+│   │   └── useTheme.ts
+│   ├── lib/utils.ts
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── index.css
+├── .github/workflows/deploy.yml   ← GitHub Pages 自動デプロイ
+├── doc/                           ← LaTeX 仕様書
+└── legacy/                        ← 旧Python版（参考）
+```
 
-## ☁️ Google Colab / CUI環境
+## 自動デプロイ
 
-Google ColaboratoryなどのCUI（キャラクター・ユーザー・インターフェース）環境で動作するバージョンです。
+`main` ブランチへの push で `.github/workflows/deploy.yml` が走り、
+ビルド成果物が GitHub Pages に自動デプロイされます。
 
-### 実行方法
+初回のみ、リポジトリの Settings → Pages → Source を
+「GitHub Actions」に設定してください。
 
-1.  **フォントファイルをアップロードします。**
-    **【重要】** このツールは `DotGothic16-Regular.ttf` と `misaki_gothic_2nd.ttf` の2つのフォントファイルに依存しています。
-    Google Colabのファイルブラウザ（画面左側のフォルダアイコン）を開き、セッションストレージのルートにこれらのフォントファイルをアップロードしてください。
+## 詳細仕様
 
-2.  **Colabセルにコードを貼り付けます。**
-    `font_to_binary_CUI.py` の中身をすべてコピーし、Colabの新しいセルに貼り付けます。
+設計の詳細は [`doc/main.tex`](doc/main.tex) を参照。
 
-3.  **セルを実行します。**
-    コードを貼り付けたセルを実行（▶ボタンをクリック、または `Shift + Enter`）すると、セルの下に操作メニューが表示され、対話形式でツールを使用できます。
+## 旧Python版
+
+以前の CUI/GUI Python 実装は [`legacy/`](legacy/) に保存されています。
+新UIでは全機能が拡張された形で再実装されています。
+
+## ライセンス
+
+同梱フォントはそれぞれのライセンスに従います（DotGothic16: SIL OFL / Misaki Gothic: 自由配布）。

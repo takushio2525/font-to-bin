@@ -1,0 +1,126 @@
+\section{ファイル構成}
+
+\subsection{ディレクトリツリー}
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize,language={},numbers=none]
+font_to_bin/
+├── public/
+│   ├── fonts/
+│   │   ├── DotGothic16-Regular.ttf
+│   │   └── misaki_gothic_2nd.ttf
+│   ├── favicon.svg
+│   └── manifest.webmanifest
+├── src/
+│   ├── core/
+│   │   ├── types.ts       … 型定義（AppState, Glyph, Format 他）
+│   │   ├── fonts.ts       … 同梱フォント定義 + カスタム登録API
+│   │   ├── rasterize.ts   … Canvas によるグリフ2値化
+│   │   ├── encode.ts      … ビットパック・数値フォーマット
+│   │   ├── format.ts      … 言語別出力文字列生成
+│   │   ├── share.ts       … URLクエリパラメータ共有
+│   │   └── defaults.ts    … 既定値
+│   ├── components/
+│   │   ├── ui/            … shadcn/ui プリミティブ群
+│   │   ├── Header.tsx
+│   │   ├── InputPanel.tsx
+│   │   ├── FormatPanel.tsx
+│   │   ├── PreviewPanel.tsx
+│   │   ├── GlyphPreview.tsx
+│   │   ├── OutputPanel.tsx
+│   │   └── PixelEditor.tsx
+│   ├── hooks/
+│   │   ├── useAppState.ts … useReducer ラッパ
+│   │   ├── useGlyphs.ts   … メモ化ラスタライザ
+│   │   ├── usePersist.ts  … LocalStorage自動保存
+│   │   └── useTheme.ts    … ダーク/ライト
+│   ├── lib/utils.ts       … cn() ヘルパ
+│   ├── App.tsx            … 3カラムレイアウト + モーダル制御
+│   ├── main.tsx           … エントリポイント
+│   └── index.css          … Tailwind ベースCSS
+├── .github/workflows/deploy.yml   … GitHub Pages 自動デプロイ
+├── doc/                           … LaTeX 設計仕様書
+├── legacy/                        … 旧Python版（参考保存）
+├── index.html
+├── package.json
+├── tsconfig.json
+├── tsconfig.node.json
+├── vite.config.ts
+├── tailwind.config.js
+├── postcss.config.js
+└── README.md
+\end{lstlisting}
+
+\subsection{core 層}
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+  \item \texttt{src/core/types.ts}\,---\,\texttt{AppState}, \texttt{Glyph},
+        \texttt{FormatOptions} など全型定義。UI と core の契約。
+  \item \texttt{src/core/fonts.ts}\,---\,\texttt{BUILTIN\_FONTS} 配列、
+        \texttt{loadFont}, \texttt{registerCustomFont}。
+        FontFace API でカスタム TTF/OTF を登録。
+  \item \texttt{src/core/rasterize.ts}\,---\,\texttt{rasterizeChar(char, opts)}
+        $\rightarrow$ \texttt{Glyph}。Canvas へ1文字描画し
+        \texttt{getImageData} でアルファ値を閾値2値化。
+  \item \texttt{src/core/encode.ts}\,---\,\texttt{packRow} / \texttt{packColumn}
+        （MSB/LSB ビットパック）、\texttt{formatNumber}（bin/hex/dec）。
+  \item \texttt{src/core/format.ts}\,---\,\texttt{formatOutput}。
+        出力言語に応じて \texttt{formatC} / \texttt{formatPython}
+        / \texttt{formatJS} / \texttt{formatRust} / \texttt{formatGo}
+        / \texttt{formatJSON} / \texttt{formatMarkdown}
+        / \texttt{formatSymbols} / \texttt{formatPlain} を呼び分け。
+  \item \texttt{src/core/share.ts}\,---\,\texttt{encodeStateToURL}
+        / \texttt{decodeStateFromURL}。
+        \texttt{AppState} を base64url 化して \texttt{?s=...} に載せる。
+  \item \texttt{src/core/defaults.ts}\,---\,\texttt{DEFAULT\_STATE}
+        （text=\texttt{"ABC"}, fontId=\texttt{dotgothic16},
+        16$\times$16, threshold=128）。
+\end{itemize}
+
+\subsection{hooks 層}
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+  \item \texttt{src/hooks/useAppState.ts}\,---\,\texttt{useReducer}。
+        Action は \texttt{setText}, \texttt{setSize},
+        \texttt{setFormat}, \texttt{setOverride} など。
+  \item \texttt{src/hooks/useGlyphs.ts}\,---\,text / font / size
+        変更時のみ再ラスタライズするメモ化。overrides をマージ。
+  \item \texttt{src/hooks/usePersist.ts}\,---\,LocalStorage キー
+        \texttt{font-to-bin.state.v1}。
+  \item \texttt{src/hooks/useTheme.ts}\,---\,light / dark 切替、
+        \texttt{font-to-bin.theme} キー。
+\end{itemize}
+
+\subsection{UI 層}
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+  \item \texttt{src/components/Header.tsx}\,---\,タイトル、
+        テーマ切替、URL 共有、リセットボタン。
+  \item \texttt{src/components/InputPanel.tsx}\,---\,テキスト、
+        フォント選択、幅/高さ、描画オフセット、太字、閾値。
+  \item \texttt{src/components/FormatPanel.tsx}\,---\,出力言語、
+        構造、基数、MSB/LSB、0/1 反転、変数名、データ型。
+  \item \texttt{src/components/PreviewPanel.tsx}\,---\,グリフ一覧。
+        クリックでピクセルエディタを開く。
+  \item \texttt{src/components/GlyphPreview.tsx}\,---\,単一グリフの
+        SVG タイル描画。
+  \item \texttt{src/components/OutputPanel.tsx}\,---\,生成結果の
+        表示 + コピー + ダウンロード。
+  \item \texttt{src/components/PixelEditor.tsx}\,---\,モーダル。
+        ペン/消しゴム/トグル/反転/回転/クリア/ズーム。
+  \item \texttt{src/components/ui/}\,---\,Radix UI ベースの
+        shadcn/ui 汎用プリミティブ群。
+\end{itemize}
+
+\subsection{その他}
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+  \item \texttt{.github/workflows/deploy.yml}\,---\,Node 20 で
+        \texttt{npm ci} $\rightarrow$ \texttt{build} $\rightarrow$
+        Pages にアップロード。
+  \item \texttt{public/fonts/*.ttf}\,---\,同梱フォント
+        （DotGothic16, Misaki Gothic 2nd）。
+  \item \texttt{legacy/}\,---\,旧 Python/Tkinter 実装
+        （参照用、ビルドからは除外）。
+\end{itemize}
+
+\newpage

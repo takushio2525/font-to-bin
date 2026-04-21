@@ -1,0 +1,48 @@
+\section{概要}
+
+Font to Binary Converter は、ドットフォントで描画された文字を
+二次元バイナリ配列（0/1）または各種エンコード形式に変換し、
+C/C++/Python/JavaScript 等のソースコードに直接埋め込める形式で
+出力する Web ツールである。
+
+本ツールは以下の用途を主な想定としている。
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+  \item マイコン（Arduino, ESP32, RZ/A1 等）の 0.96'' OLED、LCD 等
+        小型ディスプレイ上へのフォント描画用ビットマップデータ生成。
+  \item LED マトリクスパネル（8×8, 16×16, 32×32）の文字表示用データ。
+  \item ゲーム・デモ用の固定幅ドットフォント素材生成。
+  \item ピクセルアート作成時の下書きテンプレート。
+\end{itemize}
+
+\subsection{主な特徴}
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+  \item \textbf{ブラウザ単体で動作}: サーバー不要。GitHub Pages で静的配信。
+  \item \textbf{フォント同梱}: \texttt{DotGothic16} (16×16) と
+        \texttt{Misaki Gothic 2nd} (8×8) を同梱。
+  \item \textbf{ユーザーフォント対応}: TTF/OTF/WOFF をその場でアップロード可能。
+  \item \textbf{多言語出力}: C, C++, Arduino(PROGMEM), Python, JavaScript,
+        TypeScript, Rust, Go, JSON, Markdown, プレーンテキスト, 記号アート。
+  \item \textbf{詳細な出力設定}: 2D/3D/フラット/ビットパック構造、
+        10/16/2進表記、MSB/LSB、行/列優先、0/1反転など。
+  \item \textbf{ピクセルエディタ}: 生成結果を1ドット単位で手動編集可能。
+  \item \textbf{設定の自動保存と共有}: LocalStorage へ自動保存、
+        URL クエリパラメータによる共有リンク生成。
+\end{itemize}
+
+\subsection{動作環境}
+
+\begin{tabularx}{\textwidth}{l X}
+\toprule
+\textbf{項目} & \textbf{要件} \\
+\midrule
+ブラウザ & Chrome / Edge / Firefox / Safari の最新版 \\
+JavaScript & 有効 \\
+Canvas API & \texttt{CanvasRenderingContext2D}, \texttt{getImageData} 対応 \\
+FontFace API & カスタムフォント読込に使用（主要ブラウザで対応済み）\\
+LocalStorage & 設定の永続化に使用（オプトアウト可）\\
+\bottomrule
+\end{tabularx}
+
+\newpage

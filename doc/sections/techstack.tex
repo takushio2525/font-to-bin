@@ -1,0 +1,75 @@
+\section{技術スタック}
+
+\subsection{選定方針}
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+  \item \textbf{型安全と開発体験}: TypeScript + Vite による高速な
+        HMR と厳格な型チェック。
+  \item \textbf{標準準拠}: Canvas 2D / FontFace / LocalStorage など
+        W3C 標準 API のみを使用し、フレームワーク依存を最小化。
+  \item \textbf{UI 構築速度}: Tailwind CSS + shadcn/ui（Radix UI ベース）
+        でスタイルと挙動を分離しつつ、アクセシビリティを確保。
+  \item \textbf{ゼロ運用コスト}: GitHub Pages による静的配信。
+        Actions で自動デプロイ、サーバは持たない。
+\end{itemize}
+
+\subsection{使用ライブラリ・ツール}
+
+\begin{tabularx}{\textwidth}{l l X}
+\toprule
+\textbf{分類} & \textbf{名称} & \textbf{用途} \\
+\midrule
+言語       & TypeScript 5     & 型安全な JavaScript。\\
+ランタイム & Node.js 20+      & 開発・ビルド環境。\\
+ビルド     & Vite 6           & 開発サーバ + 本番バンドル。\\
+UI 基盤    & React 18         & 宣言的 UI、Hooks ベース状態管理。\\
+スタイル   & Tailwind CSS 3   & ユーティリティファースト CSS。\\
+UI 部品    & shadcn/ui        & Radix UI + Tailwind プリミティブ集。\\
+UI プリミティブ & Radix UI    & アクセシブルな Tabs/Select/Slider 等。\\
+アイコン   & lucide-react     & SVG アイコン。\\
+CVA        & class-variance-authority & バリアント管理。\\
+\bottomrule
+\end{tabularx}
+
+\subsection{ブラウザ API}
+
+\begin{tabularx}{\textwidth}{l X}
+\toprule
+\textbf{API} & \textbf{役割} \\
+\midrule
+Canvas 2D (\texttt{getContext("2d")})     & フォント描画とピクセル抽出。\\
+\texttt{getImageData}                     & RGBA 配列取得、アルファ閾値 2 値化の基礎。\\
+\texttt{FontFace}                         & カスタム TTF/OTF/WOFF の動的登録。\\
+\texttt{URL} / \texttt{URLSearchParams}   & 共有リンクのクエリパラメータ読み書き。\\
+\texttt{LocalStorage}                     & 設定の永続化。\\
+\texttt{navigator.clipboard}              & 出力結果のコピー。\\
+\texttt{matchMedia("prefers-color-scheme")} & OS テーマ検出。\\
+\bottomrule
+\end{tabularx}
+
+\subsection{同梱フォント}
+
+\begin{tabularx}{\textwidth}{l l X}
+\toprule
+\textbf{フォント} & \textbf{推奨サイズ} & \textbf{ライセンス} \\
+\midrule
+DotGothic16       & 16$\times$16 & SIL OFL 1.1 \\
+Misaki Gothic 2nd & 8$\times$8   & 自由配布（商用含む）\\
+システムモノスペース & 任意       & ブラウザ標準フォント依存 \\
+\bottomrule
+\end{tabularx}
+
+\subsection{ビルド設定}
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+  \item \texttt{vite.config.ts}: \texttt{base} を本番時のみ
+        \texttt{/font\_to\_bin/} に切り替え。
+  \item \texttt{tsconfig.json}: \texttt{strict: true}, \texttt{noUnusedLocals},
+        \texttt{noUnusedParameters} を有効化。
+  \item \texttt{tailwind.config.js}: \texttt{darkMode: "class"}、
+        カスタムカラートークンを定義。
+  \item PWA manifest (\texttt{public/manifest.webmanifest}):
+        アイコン・テーマカラー・表示モードを定義（SW は持たない）。
+\end{itemize}
+
+\newpage

@@ -1,0 +1,19 @@
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// GitHub Pagesで `/font_to_bin/` パスに配置されるため base を設定
+// ローカル開発時は '/' を使用
+export default defineConfig(({ command }) => ({
+  base: command === "build" ? "/font_to_bin/" : "/",
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+}));

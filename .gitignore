@@ -1,0 +1,53 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# build
+dist/
+dist-ssr/
+build/
+
+# editor
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# local env
+.env
+.env.local
+.env.*.local
+
+# LaTeX build artifacts
+doc/*.aux
+doc/*.log
+doc/*.out
+doc/*.toc
+doc/*.fls
+doc/*.fdb_latexmk
+doc/*.synctex.gz
+doc/*.dvi
+
+# misc
+*.tmp
+tempCodeRunnerFile.py
+*.tsbuildinfo
+.playwright-mcp/
+
+# 検証用スクリーンショット
+/initial.png
+/viewport.png
+/fresh.png
+/editor.png
+/dark.png

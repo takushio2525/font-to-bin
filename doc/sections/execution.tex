@@ -1,0 +1,120 @@
+\section{実行モデル}
+
+\subsection{起動シーケンス}
+
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+  \item \texttt{index.html} が \texttt{src/main.tsx} を読み込み、
+        React ルートを \texttt{\#root} にマウント。
+  \item \texttt{App.tsx} が初期 \texttt{AppState} を決定する。
+    \begin{itemize}[leftmargin=*,itemsep=1pt]
+      \item URL に \texttt{?s=...} があれば \texttt{decodeStateFromURL()} を
+            使用して復元。
+      \item なければ LocalStorage から \texttt{persistedInitial()} で読み込み。
+      \item どちらも無効な場合は \texttt{DEFAULT\_STATE} を採用。
+    \end{itemize}
+  \item \texttt{useGlyphs} が初期テキストをラスタライズし、
+        \texttt{formatOutput} の結果が \texttt{OutputPanel} に反映される。
+  \item \texttt{usePersist} が以後の \texttt{AppState} 変化を
+        LocalStorage に書き込み続ける。
+\end{enumerate}
+
+\subsection{ラスタライズの詳細}
+
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+  \item \texttt{<canvas>} を $\texttt{width}\times\texttt{height}$ で作成。
+  \item 背景を白でクリアし、\texttt{fillStyle="black"} で文字を描画。
+    \begin{itemize}[leftmargin=*,itemsep=1pt]
+      \item \texttt{ctx.font = `\${size}px \${fontFamily}`}
+            （太字時は \texttt{bold} を前置）。
+      \item \texttt{ctx.textBaseline = "top"}。
+      \item \texttt{fillText(char, offsetX, offsetY)}。
+    \end{itemize}
+  \item \texttt{getImageData(0,0,width,height)} で RGBA 配列を取得。
+  \item 各ピクセルのアルファチャネル $\alpha$ と閾値 $\tau$ を比較し、
+        $\alpha \ge \tau$ を $1$、それ以外を $0$ とする。
+  \item 結果を \texttt{Matrix} （\texttt{matrix[row][col]}）に格納。
+\end{enumerate}
+
+\subsection{ビットパック規則}
+
+\subsubsection{行方向パック（bitpack-row）}
+
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item 各行を左$\to$右に走査し、8bit 単位で 1 バイトを構成。
+  \item \texttt{bitOrder="msb"}: 左端ピクセルが bit7。
+  \item \texttt{bitOrder="lsb"}: 左端ピクセルが bit0。
+  \item \texttt{padByte=true} 時、行終端が 8bit 境界でなければ
+        下位（または上位）を 0 埋め。
+\end{itemize}
+
+\subsubsection{列方向パック（bitpack-col）}
+
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item 各列を上$\to$下に走査し、縦 8bit を 1 バイトに格納。
+        OLED SSD1306 の \texttt{horizontal addressing mode} と整合。
+  \item \texttt{bitOrder="msb"}: 上端ピクセルが bit7。
+  \item \texttt{bitOrder="lsb"}: 上端ピクセルが bit0（SSD1306 既定）。
+\end{itemize}
+
+\subsection{状態遷移（Reducer）}
+
+\texttt{useAppState} の Reducer は次の不変条件を守る。
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+  \item \texttt{width} / \texttt{height} / \texttt{size} の変更時、
+        既存の \texttt{overrides} は次元が一致しないため \texttt{clearAllOverrides} 扱い。
+  \item \texttt{text} の変更時、文字数が減少すれば末尾の \texttt{overrides} を破棄。
+  \item \texttt{fontId} の変更時、推奨サイズがあれば \texttt{size} を合わせる
+        （ユーザーが明示的に変更中でない場合のみ）。
+  \item \texttt{replaceState}（共有リンク適用や読込）は \texttt{overrides} を空にする。
+\end{itemize}
+
+\subsection{永続化}
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+  \item キー: \texttt{font-to-bin.state.v1}（スキーマ変更時は \texttt{.v2} へ上げる）。
+  \item 保存対象: \texttt{AppState} から \texttt{overrides} を除いた部分。
+  \item 復元時のバリデーション: 型不一致・未知フィールドは無視し、
+        欠損は既定値で補完。
+  \item ユーザーはヘッダーの「設定リセット」で LocalStorage を削除可能。
+\end{itemize}
+
+\subsection{共有リンクのラウンドトリップ}
+
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+  \item 「URL共有」ボタン押下で \texttt{encodeStateToURL(state)} を実行。
+  \item \texttt{JSON.stringify} $\rightarrow$ \texttt{TextEncoder}
+        $\rightarrow$ base64url 変換。
+  \item 現在の URL の \texttt{?s=} を差し替え、クリップボードへコピー。
+  \item 開いた側では起動時に \texttt{decodeStateFromURL()} が復元。
+        展開失敗時は既定値へフォールバック。
+\end{enumerate}
+
+\subsection{パフォーマンス考慮}
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+  \item \texttt{useGlyphs} は \texttt{text + geometry + overrides}
+        のハッシュキー変化時のみ再実行。
+  \item フォーマッタは文字数 $N$、幅 $W$、高さ $H$ に対して $O(NWH)$。
+        典型値（$N=8, W=H=16$）では数百~$\mu$s。
+  \item ピクセルエディタは 1 グリフあたり $W\times H$ ノードで描画するが、
+        SVG の仮想 DOM に任せており数ミリ秒以内で再描画可能。
+\end{itemize}
+
+\subsection{デプロイ}
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+  \item \texttt{main} ブランチへの push で GitHub Actions が起動。
+  \item \texttt{actions/setup-node@v4} $\rightarrow$ \texttt{npm ci}
+        $\rightarrow$ \texttt{npm run build} $\rightarrow$
+        \texttt{actions/upload-pages-artifact}
+        $\rightarrow$ \texttt{actions/deploy-pages}。
+  \item ビルド後、\texttt{dist/index.html} を \texttt{404.html} にコピーして
+        SPA の任意パス直打ちに対応。
+\end{itemize}
+
+\begin{cautionbox}[初回のみ必要な設定]
+リポジトリの \textbf{Settings $\to$ Pages $\to$ Source} を
+\texttt{GitHub Actions} に設定する必要がある（\texttt{gh-pages} ブランチは使わない）。
+\end{cautionbox}
+

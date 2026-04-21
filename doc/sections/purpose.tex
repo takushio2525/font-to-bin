@@ -1,0 +1,47 @@
+\section{目的}
+
+本ツールの目的は次の3点に集約される。
+
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+  \item \textbf{即時性}: ブラウザを開いてから配列を取得するまでの
+        手数を最小化する。インストール、ログイン、ファイル入出力を要しない。
+  \item \textbf{網羅性}: 組み込みで実際に遭遇する出力形式
+        （言語・構造・ビット順・エンディアン・修飾子）を広くカバーする。
+  \item \textbf{調整可能性}: 自動生成された結果を
+        1ドット単位で手動編集できる手段を提供する。
+\end{enumerate}
+
+\subsection{達成基準}
+
+\begin{tabularx}{\textwidth}{l X}
+\toprule
+\textbf{観点} & \textbf{基準} \\
+\midrule
+起動性 & ブラウザでURLを開くだけで利用可能、認証不要 \\
+サイズ & 初期バンドル \texttt{< 500\,KB} gzipped（目標） \\
+応答性 & 文字数100以下で描画再計算が \texttt{< 100\,ms}（目標） \\
+対応文字 & Unicode 基本多言語面（BMP）全域、16×16 の想定でのみ品質保証 \\
+多言語出力 & C/C++/Arduino/Python/JS/TS/Rust/Go/JSON/MD/Plain/Symbols の12形式 \\
+出力構造 & 2次元/3次元/フラット/ビットパック（行・列）の5種類 \\
+編集機能 & ペン/消しゴム/反転/回転/クリア/トグル \\
+永続化 & LocalStorage 自動保存、URL 共有可能、オプトアウト可 \\
+\bottomrule
+\end{tabularx}
+
+\subsection{非目標}
+
+以下は本ツールのスコープ外とする。
+
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+  \item アンチエイリアス付きのグレースケール出力
+        （本ツールは2値ラスタライズに特化）。
+  \item SVG や PNG などの画像ファイル形式での直接出力
+        （必要ならプレビューを外部でキャプチャする）。
+  \item ベクトルフォントの編集・グリフ追加機能。
+  \item サーバーサイドでのフォント処理
+        （すべてクライアントサイドで完結）。
+  \item 商用フォントの再配布
+        （同梱フォントはライセンスが明確なもののみ）。
+\end{itemize}
+
+\newpage

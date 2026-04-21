@@ -1,0 +1,75 @@
+\section{アーキテクチャ}
+
+\subsection{全体構成}
+
+本ツールは純粋なクライアントサイド Single Page Application (SPA) であり、
+サーバー通信は行わない（フォントファイル取得を除く）。
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=3mm and 4mm,
+  box/.style={draw=accentblue,fill=accentblue!8,rounded corners=1.5mm,
+              minimum width=34mm,minimum height=10mm,align=center,
+              font=\small},
+  core/.style={draw=headerblue,fill=headerblue!10,rounded corners=1.5mm,
+               minimum width=34mm,minimum height=10mm,align=center,
+               font=\small\bfseries},
+  arr/.style={-{Latex[length=2mm]},draw=headerblue,thick},
+]
+  \node[box] (user)   {ユーザー操作\\(UI)};
+  \node[box,right=of user] (state)  {useAppState\\(useReducer)};
+  \node[core,right=of state] (core) {core層\\(rasterize/encode/format)};
+  \node[box,below=of user]  (persist) {usePersist\\(LocalStorage)};
+  \node[box,below=of state] (share)   {share.ts\\(URL クエリ)};
+  \node[box,below=of core]  (canvas)  {Canvas API\\FontFace API};
+  \node[box,right=of core]  (output)  {OutputPanel\\(クリップボード)};
+
+  \draw[arr] (user) -- (state);
+  \draw[arr] (state) -- (core);
+  \draw[arr] (core) -- (output);
+  \draw[arr] (state) -- (persist);
+  \draw[arr] (state) -- (share);
+  \draw[arr] (core) -- (canvas);
+\end{tikzpicture}
+\end{center}
+
+\subsection{レイヤ分割}
+
+\begin{tabularx}{\textwidth}{l X}
+\toprule
+\textbf{レイヤ} & \textbf{責務} \\
+\midrule
+\texttt{src/core/} & 純粋関数群。DOM依存を最小化（Canvas利用箇所のみ）。ラスタライズ、ビットパック、フォーマッタ、共有URLエンコード。\\
+\texttt{src/hooks/} & React フック。状態管理（useReducer）、永続化（LocalStorage）、テーマ切替、グリフメモ化。\\
+\texttt{src/components/} & UI コンポーネント。shadcn/ui プリミティブを基盤とし、パネル単位で責務分離。\\
+\texttt{src/components/ui/} & Radix UI ベースの汎用プリミティブ（Button, Card, Input, Tabs, Switch, Slider, Select, Tooltip 等）。\\
+\bottomrule
+\end{tabularx}
+
+\subsection{データフロー}
+
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+  \item ユーザー入力 → \texttt{useAppState} の dispatch でアクション発行。
+  \item Reducer が新しい \texttt{AppState} を返し、コンポーネントが再描画。
+  \item \texttt{useGlyphs} が入力テキストとフォント設定に基づき
+        \texttt{rasterizeChar()} を再実行しグリフ配列をメモ化。
+  \item \texttt{formatOutput()} がグリフ配列 + フォーマット設定から
+        出力文字列を生成し、\texttt{OutputPanel} が表示。
+  \item 同時に \texttt{usePersist} が \texttt{AppState} を
+        LocalStorage に書き戻す（\texttt{overrides} を除く）。
+\end{enumerate}
+
+\subsection{ビルド・配布パイプライン}
+
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+  \item 開発: \texttt{npm run dev}（Vite 開発サーバ、HMR有効）。
+  \item 本番ビルド: \texttt{npm run build}（Vite が \texttt{dist/} を生成）。
+  \item 自動デプロイ: \texttt{main} ブランチ push を契機に
+        \texttt{.github/workflows/deploy.yml} が起動、
+        GitHub Pages（\texttt{gh-pages} 相当の Actions 経由）へ配信。
+  \item SPA フォールバック: デプロイ時に \texttt{404.html} を
+        \texttt{index.html} と同内容でコピーし、
+        任意パスでのアクセスに対応。
+\end{enumerate}
+
+\newpage

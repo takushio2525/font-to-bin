@@ -3,7 +3,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 # conv_ASCII関数で定義された文字セット
 # A-Z (0-25), a-z (26-51), 0-9 (52-61), ! (62), ? (63)
-CHARACTER_SET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!?"
+CHARACTER_SET = "ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ０１２３４５６７８９！？"
 
 
 def generate_binary_from_dot_font(text, font_path, size):
