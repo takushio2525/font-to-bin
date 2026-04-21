@@ -92,4 +92,19 @@ npm run preview   # 本番ビルドのプレビュー
 
 ## ライセンス
 
-同梱フォントはそれぞれのライセンスに従います（DotGothic16: SIL OFL / Misaki Gothic: 自由配布）。
+本プロジェクトのソースコードは [MIT License](LICENSE) の下で公開されています。
+同梱フォントは本プロジェクトのライセンスとは別に、それぞれのライセンスが適用されます。
+
+| フォント | 作者 | ライセンス | ライセンス本文 |
+|---|---|---|---|
+| DotGothic16 | Fontworks Inc. | SIL Open Font License 1.1 | [`public/fonts/OFL.txt`](public/fonts/OFL.txt) |
+| 美咲フォント 第2版 (Misaki Gothic 2nd) | 門真なむ (Kadoma Namu) | 自由利用可（クレジット推奨） | [`public/fonts/MISAKI-LICENSE.txt`](public/fonts/MISAKI-LICENSE.txt) |
+
+- DotGothic16: <https://github.com/fontworks-fonts/DotGothic16>
+- 美咲フォント: <https://littlelimit.net/misaki.htm>
+
+ユーザーがアップロードしたフォントはブラウザ内でのみ処理され、サーバーには送信されません。
+
+## 作者
+
+[takushio2525](https://github.com/takushio2525)
