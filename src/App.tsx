@@ -142,7 +142,7 @@ export default function App() {
           Built with React + Vite · Fonts: DotGothic16, Misaki Gothic 2nd ·
           <a
             className="ml-1 underline hover:text-foreground"
-            href="https://github.com/takushio2525/font_to_bin"
+            href="https://github.com/takushio2525/font-to-bin"
             target="_blank"
             rel="noopener noreferrer"
           >

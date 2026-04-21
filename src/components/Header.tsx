@@ -103,7 +103,7 @@ export function Header({ theme, onToggleTheme, onShare, mode, onModeChange }: Pr
           </Button>
           <Button variant="ghost" size="icon" asChild title="GitHub">
             <a
-              href="https://github.com/takushio2525/font_to_bin"
+              href="https://github.com/takushio2525/font-to-bin"
               target="_blank"
               rel="noopener noreferrer"
             >

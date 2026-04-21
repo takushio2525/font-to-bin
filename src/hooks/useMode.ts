@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 export type Mode = "easy" | "advanced" | "free";
 
-const KEY = "font_to_bin_mode_v1";
+const KEY = "font-to-bin_mode_v1";
 
 function read(): Mode {
   try {

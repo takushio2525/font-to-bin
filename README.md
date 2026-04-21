@@ -3,7 +3,7 @@
 ドットフォントを任意のバイナリ配列に変換する Web ツール。
 ブラウザだけで動作し、インストール不要。GitHub Pages で公開されています。
 
-**▶ 公開URL:** <https://takumishiozawa.github.io/font_to_bin/>
+**▶ 公開URL:** <https://takushio2525.github.io/font-to-bin/>
 
 ## 特徴
 
