@@ -3,7 +3,7 @@
 ドットフォントを任意のバイナリ配列に変換する Web ツール。
 ブラウザだけで動作し、インストール不要。GitHub Pages で公開されています。
 
-**▶ 公開URL:** <https://takushio2525.github.io/font-to-bin/>
+**▶ 公開URL:** <https://font-to-bin.takushio2525.com>
 
 ## 特徴
 
@@ -39,6 +39,7 @@ npm run preview   # 本番ビルドのプレビュー
 .
 ├── public/
 │   ├── fonts/            ← 同梱TTFフォント
+│   ├── CNAME             ← カスタムドメイン設定
 │   ├── favicon.svg
 │   └── manifest.webmanifest
 ├── src/
@@ -80,6 +81,13 @@ npm run preview   # 本番ビルドのプレビュー
 
 初回のみ、リポジトリの Settings → Pages → Source を
 「GitHub Actions」に設定してください。
+
+### カスタムドメイン
+
+`public/CNAME` に配信ドメインを記載しており、ビルド時に `dist/CNAME` として
+成果物へ含まれます。DNS 側は `font-to-bin` の CNAME レコードを
+`takushio2525.github.io` に向けています（CDN プロキシは OFF）。
+旧 URL `https://takushio2525.github.io/font-to-bin/` は新 URL へ転送されます。
 
 ## 詳細仕様
 
