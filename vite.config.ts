@@ -6,10 +6,10 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// GitHub Pagesで `/font-to-bin/` パスに配置されるため base を設定
-// ローカル開発時は '/' を使用
-export default defineConfig(({ command }) => ({
-  base: command === "build" ? "/font-to-bin/" : "/",
+// カスタムドメイン (font-to-bin.takushio2525.com) のルートに配置されるため
+// 開発・本番ともに base は '/'
+export default defineConfig(() => ({
+  base: "/",
   plugins: [react()],
   resolve: {
     alias: {
