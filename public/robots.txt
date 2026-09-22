@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://font-to-bin.takushio2525.com/sitemap.xml

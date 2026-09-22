@@ -2,12 +2,56 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Google tag (gtag.js) / GA4 測定 ID は takushio2525.com 一族で共通 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-9BE9FDHVWQ"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-9BE9FDHVWQ");
+    </script>
+
+    <!-- AdSense のサイト所有権確認（メタタグ方式。広告ユニットは未配置） -->
+    <meta name="google-adsense-account" content="ca-pub-7311039699517221" />
+
+    <title>Font to Binary Converter</title>
+    <meta
+      name="description"
+      content="ドットフォントを C / Arduino / Python など任意のバイナリ配列に変換する Web ツール。TTF/OTF のアップロード、ピクセル単位の編集、ビットパック出力に対応。インストール不要でブラウザだけで動作します。"
+    />
+    <link rel="canonical" href="https://font-to-bin.takushio2525.com/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Font to Binary Converter" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:title" content="Font to Binary Converter" />
+    <meta
+      property="og:description"
+      content="ドットフォントを C / Arduino / Python など任意のバイナリ配列に変換する Web ツール。TTF/OTF のアップロード、ピクセル単位の編集、ビットパック出力に対応。インストール不要でブラウザだけで動作します。"
+    />
+    <meta property="og:url" content="https://font-to-bin.takushio2525.com/" />
+    <meta property="og:image" content="https://font-to-bin.takushio2525.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Font to Binary Converter の操作画面" />
+
+    <!-- X (Twitter) カード -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Font to Binary Converter" />
+    <meta
+      name="twitter:description"
+      content="ドットフォントを C / Arduino / Python など任意のバイナリ配列に変換する Web ツール。TTF/OTF のアップロード、ピクセル単位の編集、ビットパック出力に対応。"
+    />
+    <meta name="twitter:image" content="https://font-to-bin.takushio2525.com/og-image.png" />
+
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <meta name="theme-color" content="#1B3A5C" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="ドットフォントを任意のバイナリ配列に変換する Web ツール" />
-    <title>Font to Binary Converter</title>
   </head>
   <body>
     <div id="root"></div>
