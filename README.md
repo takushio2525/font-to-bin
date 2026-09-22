@@ -89,6 +89,10 @@ npm run preview   # 本番ビルドのプレビュー
 `takushio2525.github.io` に向けています（CDN プロキシは OFF）。
 旧 URL `https://takushio2525.github.io/font-to-bin/` は新 URL へ転送されます。
 
+## アクセス解析と Cookie 同意
+
+GA4 の計測は、ハブ takushio2525.com が配る共用の同意スクリプト（`https://takushio2525.com/consent/consent.js`、Google Consent Mode v2）の下で動きます。`index.html` の `<head>` で consent.js を gtag より前に同期で読み込み、EEA・英国・スイスの閲覧者にだけ同意バナーを出します。選択は `.takushio2525.com` 共通の Cookie `tk_consent` に保存され、一族の全サイトで共有されます。consent.js が読めなかったときは gtag スニペット内の 1 行で全項目を denied に倒します。フッターの「プライバシーポリシー」は `https://takushio2525.com/privacy/` へ、「Cookie 設定」（`data-tk-consent-open`）はバナーを開き直します。この順番を崩すと同意前に計測が始まるので、gtag を触るときは consent.js より下に置いたままにしてください。
+
 ## 詳細仕様
 
 設計の詳細は [`doc/main.tex`](doc/main.tex) を参照。

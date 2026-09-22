@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- Cookie 同意（Consent Mode v2）。ハブ takushio2525.com の共用スクリプト。必ず Google タグより前に、同期で読む -->
+    <script src="https://takushio2525.com/consent/consent.js"></script>
+
     <!-- Google tag (gtag.js) / GA4 測定 ID は takushio2525.com 一族で共通 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-30GVXMB0GH"></script>
     <script>
@@ -11,6 +14,14 @@
       function gtag() {
         dataLayer.push(arguments);
       }
+      // consent.js が読めなかった（ブロック・通信失敗）ときは、全部 denied にして止める側に倒す
+      if (!window.tkConsent)
+        gtag("consent", "default", {
+          ad_storage: "denied",
+          ad_user_data: "denied",
+          ad_personalization: "denied",
+          analytics_storage: "denied",
+        });
       gtag("js", new Date());
       gtag("config", "G-30GVXMB0GH");
     </script>

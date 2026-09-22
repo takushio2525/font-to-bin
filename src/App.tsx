@@ -148,6 +148,22 @@ export default function App() {
           >
             GitHub
           </a>
+          {" · "}
+          <a
+            className="underline hover:text-foreground"
+            href="https://takushio2525.com/privacy/"
+          >
+            プライバシーポリシー
+          </a>
+          {" · "}
+          {/* 押すと consent.js が同意バナーをその場で開き直す。React の onClick を付けず素の <a> のままにする */}
+          <a
+            className="underline hover:text-foreground"
+            href="https://takushio2525.com/privacy/#cookie"
+            data-tk-consent-open=""
+          >
+            Cookie 設定
+          </a>
         </footer>
       </main>
 
