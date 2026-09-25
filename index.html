@@ -3,28 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Content-Security-Policy の meta はビルド時に csp.ts が <meta charset> の直後へ差し込む -->
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
 
     <!-- Cookie 同意（Consent Mode v2）。ハブ takushio2525.com の共用スクリプト。必ず Google タグより前に、同期で読む -->
     <script src="https://takushio2525.com/consent/consent.js"></script>
 
-    <!-- Google tag (gtag.js) / GA4 測定 ID は takushio2525.com 一族で共通 -->
+    <!-- Google tag (gtag.js) / GA4 測定 ID は takushio2525.com 一族で共通。
+         初期化は CSP でインラインを禁じているため public/ga-init.js に置き、consent.js の後に同期で読む -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-30GVXMB0GH"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      // consent.js が読めなかった（ブロック・通信失敗）ときは、全部 denied にして止める側に倒す
-      if (!window.tkConsent)
-        gtag("consent", "default", {
-          ad_storage: "denied",
-          ad_user_data: "denied",
-          ad_personalization: "denied",
-          analytics_storage: "denied",
-        });
-      gtag("js", new Date());
-      gtag("config", "G-30GVXMB0GH");
-    </script>
+    <script src="/ga-init.js"></script>
 
     <!-- AdSense のサイト所有権確認（メタタグ方式。広告ユニットは未配置） -->
     <meta name="google-adsense-account" content="ca-pub-3136871606832456" />

@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import { fileURLToPath } from "url";
+import { cspMetaPlugin } from "./csp";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,7 +11,7 @@ const __dirname = path.dirname(__filename);
 // 開発・本番ともに base は '/'
 export default defineConfig(() => ({
   base: "/",
-  plugins: [react()],
+  plugins: [react(), cspMetaPlugin()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

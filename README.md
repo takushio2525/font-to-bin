@@ -21,7 +21,7 @@
 
 ### 必要なもの
 
-- Node.js 20 以上
+- Node.js 22.12 以上（CI は 24）
 - npm
 
 ### セットアップ
@@ -31,6 +31,7 @@ npm install
 npm run dev       # ローカル開発サーバ (http://localhost:5173)
 npm run build     # 本番ビルド (dist/)
 npm run preview   # 本番ビルドのプレビュー
+npm test          # ユニットテスト (vitest)
 ```
 
 ### プロジェクト構成
@@ -40,6 +41,7 @@ npm run preview   # 本番ビルドのプレビュー
 ├── public/
 │   ├── fonts/            ← 同梱TTFフォント
 │   ├── CNAME             ← カスタムドメイン設定
+│   ├── ga-init.js        ← Google タグの初期化（CSP のため外部ファイル）
 │   ├── favicon.svg
 │   └── manifest.webmanifest
 ├── src/
@@ -50,6 +52,7 @@ npm run preview   # 本番ビルドのプレビュー
 │   │   ├── encode.ts
 │   │   ├── format.ts
 │   │   ├── share.ts
+│   │   ├── sanitize.ts   ← 共有URL・LocalStorage から読んだ設定の検証
 │   │   └── defaults.ts
 │   ├── components/       ← UIコンポーネント
 │   │   ├── ui/           ← shadcn/ui 系プリミティブ
@@ -69,6 +72,8 @@ npm run preview   # 本番ビルドのプレビュー
 │   ├── App.tsx
 │   ├── main.tsx
 │   └── index.css
+├── tests/                         ← CSP・index.html のテスト
+├── csp.ts                         ← CSP の定義（ビルド時に meta で埋め込む）
 ├── .github/workflows/deploy.yml   ← GitHub Pages 自動デプロイ
 ├── doc/                           ← LaTeX 仕様書
 └── legacy/                        ← 旧Python版（参考）
@@ -91,7 +96,13 @@ npm run preview   # 本番ビルドのプレビュー
 
 ## アクセス解析と Cookie 同意
 
-GA4 の計測は、ハブ takushio2525.com が配る共用の同意スクリプト（`https://takushio2525.com/consent/consent.js`、Google Consent Mode v2）の下で動きます。`index.html` の `<head>` で consent.js を gtag より前に同期で読み込み、EEA・英国・スイスの閲覧者にだけ同意バナーを出します。選択は `.takushio2525.com` 共通の Cookie `tk_consent` に保存され、一族の全サイトで共有されます。consent.js が読めなかったときは gtag スニペット内の 1 行で全項目を denied に倒します。フッターの「プライバシーポリシー」は `https://takushio2525.com/privacy/` へ、「Cookie 設定」（`data-tk-consent-open`）はバナーを開き直します。この順番を崩すと同意前に計測が始まるので、gtag を触るときは consent.js より下に置いたままにしてください。
+GA4 の計測は、ハブ takushio2525.com が配る共用の同意スクリプト（`https://takushio2525.com/consent/consent.js`、Google Consent Mode v2）の下で動きます。`index.html` の `<head>` で consent.js を gtag より前に同期で読み込み、EEA・英国・スイスの閲覧者にだけ同意バナーを出します。選択は `.takushio2525.com` 共通の Cookie `tk_consent` に保存され、一族の全サイトで共有されます。Google タグの初期化は `public/ga-init.js` にあり、consent.js が読めなかったときはここで全項目を denied に倒します。共有 URL の `?s=`（入力した文字と設定）は `page_location` から除いて送ります。フッターの「プライバシーポリシー」は `https://takushio2525.com/privacy/` へ、「Cookie 設定」（`data-tk-consent-open`）はバナーを開き直します。この順番を崩すと同意前に計測が始まるので、gtag を触るときは consent.js より下に置いたままにしてください。
+
+## セキュリティ
+
+GitHub Pages ではレスポンスヘッダを付けられないため、Content Security Policy は `csp.ts` に定義し、ビルド時に `<meta http-equiv="Content-Security-Policy">` として `index.html` の先頭へ埋め込みます（開発サーバーでは React Refresh がインラインスクリプトを使うので付けません）。スクリプトは自サイト・`https://takushio2525.com/consent/`・Google タグだけを許し、インラインスクリプトは禁止しています。外部のスクリプトや送信先を足すときは `csp.ts` を更新し、`npm test` と `npm run build` 後のブラウザのコンソールで CSP 違反が出ないことを確かめてください。meta の CSP では `frame-ancestors` は効きません。
+
+共有 URL（`?s=`）と LocalStorage から読んだ設定は `src/core/sanitize.ts` で型と範囲を検証してから使います。共有 URL は第三者が作れるので、文字数（2000 字かつ文字数×幅×高さ 200 万まで）と変数名・データ型に使える文字を制限し、UI から設定できない `prefix`・`suffix` は読み込まないようにしています。
 
 ## 詳細仕様
 

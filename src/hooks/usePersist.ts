@@ -1,20 +1,16 @@
 import { useEffect } from "react";
 import type { AppState } from "@/core/types";
+import { sanitizeState } from "@/core/sanitize";
 
 const KEY = "font-to-bin.state.v1";
 
 // AppState をローカルストレージへ自動保存し、初期化時に復元する
-export function persistedInitial<T extends AppState>(defaults: T): T {
+export function persistedInitial(defaults: AppState): AppState {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return defaults;
-    const parsed = JSON.parse(raw) as Partial<T>;
-    // 浅くマージ。format はネストなので個別マージ
-    return {
-      ...defaults,
-      ...parsed,
-      format: { ...defaults.format, ...(parsed.format ?? {}) },
-    } as T;
+    // 欠けた項目は既定値で埋め、壊れた値や範囲外の値は丸める
+    return sanitizeState(JSON.parse(raw), "stored", defaults);
   } catch {
     return defaults;
   }
