@@ -18,7 +18,8 @@ export const PRESETS: Preset[] = [
     format: {
       language: "arduino",
       structure: "bitpack-row",
-      dataType: "const uint8_t PROGMEM",
+      // const と PROGMEM は出力側（buildCDeclaration）が付ける
+      dataType: "uint8_t",
       radix: "hex",
       bitOrder: "msb",
       invert: false,
