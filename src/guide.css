@@ -1,0 +1,156 @@
+/* 使い方ガイド（guide/ の下の各ページ）の見た目。色はツール本体と同じ変数（index.css）を使う */
+@import "./index.css";
+
+/* 本文の列と、右の 300px の列（目次・ほかのガイド）。
+   広告を足すときは、右の列か本文の section の間に高さを決めた枠を置けば、ほかの要素を押し下げずに済む */
+.guide-layout {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 1024px) {
+  .guide-layout {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+}
+
+.guide-article {
+  max-width: 46rem;
+  font-size: 1rem;
+  line-height: 1.85;
+}
+.guide-article > * + * {
+  margin-top: 1rem;
+}
+.guide-article h1 {
+  font-size: 1.6rem;
+  line-height: 1.4;
+  font-weight: 700;
+}
+.guide-article h2 {
+  margin-top: 2.5rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid hsl(var(--border));
+  font-size: 1.3rem;
+  line-height: 1.45;
+  font-weight: 700;
+  scroll-margin-top: 1rem;
+}
+.guide-article h3 {
+  margin-top: 1.75rem;
+  font-size: 1.08rem;
+  font-weight: 700;
+}
+.guide-article section > * + * {
+  margin-top: 1rem;
+}
+.guide-article a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.guide-article ul {
+  list-style: disc;
+  padding-left: 1.4rem;
+}
+.guide-article ol {
+  list-style: decimal;
+  padding-left: 1.4rem;
+}
+.guide-article li + li {
+  margin-top: 0.3rem;
+}
+.guide-article :not(pre) > code {
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.3rem;
+  background: hsl(var(--muted));
+  font-size: 0.9em;
+}
+.guide-article pre {
+  overflow-x: auto;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background: #0b1221;
+  color: #e6edf3;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+.guide-article .guide-lead {
+  color: hsl(var(--muted-foreground));
+}
+.guide-article .guide-meta {
+  font-size: 0.8rem;
+  color: hsl(var(--muted-foreground));
+}
+.guide-article .guide-note {
+  padding: 0.75rem 1rem;
+  border-left: 4px solid hsl(var(--primary));
+  border-radius: 0.25rem;
+  background: hsl(var(--accent));
+  font-size: 0.93rem;
+}
+/* 表は内容の幅まで広げ、本文の幅に入りきらないときだけ横にスクロールする */
+.guide-article table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+.guide-article th,
+.guide-article td {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid hsl(var(--border));
+  text-align: left;
+  vertical-align: top;
+}
+.guide-article th {
+  background: hsl(var(--muted));
+  font-weight: 600;
+}
+.guide-article figure {
+  margin-top: 1.25rem;
+}
+.guide-article figcaption {
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ドット絵の図（SVG）。1 ドット = 1 マスで、表示の大きさは幅で決める */
+.glyph-figs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.glyph-fig {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: hsl(var(--muted-foreground));
+}
+.glyph-fig svg {
+  display: block;
+  border-radius: 0.25rem;
+}
+
+.guide-aside {
+  font-size: 0.9rem;
+}
+.guide-aside > * + * {
+  margin-top: 1.25rem;
+}
+@media (min-width: 1024px) {
+  .guide-aside-sticky {
+    position: sticky;
+    top: 1rem;
+  }
+}
+.guide-aside li a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

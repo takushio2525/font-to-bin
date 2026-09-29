@@ -15,7 +15,8 @@
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    /* 背景・カード・muted・accent のどの地でもコントラスト比 4.5 以上になる明度（47% では背景に対して 4.49 だった） */
+    --muted-foreground: 215 16% 44%;
     --accent: 217 91% 95%;
     --accent-foreground: 217 91% 35%;
     --destructive: 0 72% 51%;
@@ -63,6 +64,13 @@
   kbd,
   pre {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  /* index.html の #root の下に JS なしでも読める紹介を置いている。
+     ツールが描画される前から #root が 1 画面ぶんの高さを持つので、紹介は最初から画面の外にあり、
+     描画で押し下げられてもレイアウトのずれ（CLS）にならない */
+  #root {
+    min-height: 100vh;
   }
 }
 

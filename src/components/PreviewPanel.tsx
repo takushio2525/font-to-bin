@@ -7,6 +7,11 @@ import { GlyphPreview } from "./GlyphPreview";
 
 type Props = {
   glyphs: Glyph[];
+  // フォントの読み込み中か（読み込み中は glyphs が空になる）と、そのとき確保する文字数と 1 文字の大きさ
+  loading: boolean;
+  pendingCount: number;
+  cellWidth: number;
+  cellHeight: number;
   overriddenIndices: Set<number>;
   onOpenEditor: (index: number) => void;
   onClearAllOverrides: () => void;
@@ -26,6 +31,10 @@ function defaultScale(w: number): number {
 
 export function PreviewPanel({
   glyphs,
+  loading,
+  pendingCount,
+  cellWidth,
+  cellHeight,
   overriddenIndices,
   onOpenEditor,
   onClearAllOverrides,
@@ -33,7 +42,7 @@ export function PreviewPanel({
   gridStep,
   onGridStepChange,
 }: Props) {
-  const baseScale = useMemo(() => defaultScale(glyphs[0]?.width ?? 16), [glyphs]);
+  const baseScale = useMemo(() => defaultScale(glyphs[0]?.width ?? cellWidth), [glyphs, cellWidth]);
   // ユーザーによるズーム倍率（1.0が規定）
   const [zoom, setZoom] = useState<number>(1);
   const scale = Math.max(2, Math.round(baseScale * zoom));
@@ -100,7 +109,26 @@ export function PreviewPanel({
         </div>
       </CardHeader>
       <CardContent>
-        {glyphs.length === 0 ? (
+        {glyphs.length === 0 && loading ? (
+          // フォントの読み込み中は、描画後と同じ構造・同じ横幅（文字数ぶん）の枠を先に出しておく。
+          // 高さと横スクロールバーの有無が描画後と揃うので、下の設定欄が押し下げられない（CLS 対策）
+          <div className="overflow-x-auto scrollbar-thin -mx-1 px-1 pb-2" aria-busy="true">
+            <div
+              className="flex flex-nowrap items-end gap-3 w-max"
+              style={{ minWidth: pendingCount * (cellWidth * scale + 2) + (pendingCount - 1) * 12 }}
+            >
+              <div className="relative shrink-0">
+                <div className="inline-flex flex-col items-center gap-1">
+                  <div
+                    className="rounded border border-border bg-[#0b1221] box-content"
+                    style={{ width: cellWidth * scale, height: cellHeight * scale }}
+                  />
+                  <span className="text-xs text-muted-foreground">フォントを読み込み中…</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : glyphs.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-12 text-center text-sm text-muted-foreground">
             <div className="text-3xl" aria-hidden>✨</div>
             <p>下の「変換したい文字」に入力するとここにドット絵が表示されます</p>

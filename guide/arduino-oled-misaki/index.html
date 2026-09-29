@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Content-Security-Policy の meta はビルド時に csp.ts が <meta charset> の直後へ差し込む -->
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <script src="/theme-init.js"></script>
+
+    <!-- Cookie 同意と GA4 はツール本体（/index.html）と同じ順番で読む -->
+    <script src="https://takushio2525.com/consent/consent.js"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-30GVXMB0GH"></script>
+    <script src="/ga-init.js"></script>
+    <meta name="google-adsense-account" content="ca-pub-3136871606832456" />
+
+    <title>Arduino と OLED（SSD1306）で日本語を表示する：美咲フォント 8×8 を配列にして drawBitmap で描く | Font to Binary Converter</title>
+    <meta name="description" content="日本語フォントのライブラリを入れずに、表示したい文字だけを美咲フォント 8×8 の配列にして Arduino の OLED（SSD1306）に出す手順。ツールの実際の出力と、Adafruit_GFX の drawBitmap・U8g2 の drawXBMP に合わせる設定を説明します。" />
+    <link rel="canonical" href="https://font-to-bin.takushio2525.com/guide/arduino-oled-misaki/" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Font to Binary Converter" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:title" content="Arduino と OLED（SSD1306）で日本語を表示する：美咲フォント 8×8 を配列にして drawBitmap で描く" />
+    <meta property="og:description" content="日本語フォントのライブラリを入れずに、表示したい文字だけを美咲フォント 8×8 の配列にして Arduino の OLED（SSD1306）に出す手順。ツールの実際の出力と、Adafruit_GFX の drawBitmap・U8g2 の drawXBMP に合わせる設定を説明します。" />
+    <meta property="og:url" content="https://font-to-bin.takushio2525.com/guide/arduino-oled-misaki/" />
+    <meta property="og:image" content="https://font-to-bin.takushio2525.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Font to Binary Converter の操作画面" />
+    <meta property="article:published_time" content="2026-09-29" />
+    <meta property="article:modified_time" content="2026-09-29" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Arduino と OLED（SSD1306）で日本語を表示する：美咲フォント 8×8 を配列にして drawBitmap で描く" />
+    <meta name="twitter:description" content="日本語フォントのライブラリを入れずに、表示したい文字だけを美咲フォント 8×8 の配列にして Arduino の OLED（SSD1306）に出す手順。ツールの実際の出力と、Adafruit_GFX の drawBitmap・U8g2 の drawXBMP に合わせる設定を説明します。" />
+    <meta name="twitter:image" content="https://font-to-bin.takushio2525.com/og-image.png" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#1B3A5C" />
+    <link rel="stylesheet" href="/src/guide.css" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "TechArticle",
+            "@id": "https://font-to-bin.takushio2525.com/guide/arduino-oled-misaki/#article",
+            "headline": "Arduino と OLED（SSD1306）で日本語を表示する：美咲フォント 8×8 を配列にして drawBitmap で描く",
+            "description": "日本語フォントのライブラリを入れずに、表示したい文字だけを美咲フォント 8×8 の配列にして Arduino の OLED（SSD1306）に出す手順。ツールの実際の出力と、Adafruit_GFX の drawBitmap・U8g2 の drawXBMP に合わせる設定を説明します。",
+            "datePublished": "2026-09-29",
+            "dateModified": "2026-09-29",
+            "inLanguage": "ja",
+            "author": {
+              "@id": "https://takushio2525.com/#person"
+            },
+            "publisher": {
+              "@id": "https://takushio2525.com/#person"
+            },
+            "image": "https://font-to-bin.takushio2525.com/og-image.png",
+            "mainEntityOfPage": "https://font-to-bin.takushio2525.com/guide/arduino-oled-misaki/",
+            "isPartOf": {
+              "@id": "https://font-to-bin.takushio2525.com/#website"
+            },
+            "about": [
+              {
+                "@type": "Thing",
+                "name": "Arduino"
+              },
+              {
+                "@type": "Thing",
+                "name": "SSD1306"
+              },
+              {
+                "@type": "Thing",
+                "name": "美咲フォント"
+              },
+              {
+                "@type": "Thing",
+                "name": "ビットマップフォント"
+              }
+            ]
+          },
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Font to Binary Converter",
+                "item": {
+                  "@type": "WebPage",
+                  "@id": "https://font-to-bin.takushio2525.com/",
+                  "name": "Font to Binary Converter"
+                }
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Arduino と OLED で日本語を表示する",
+                "item": {
+                  "@type": "WebPage",
+                  "@id": "https://font-to-bin.takushio2525.com/guide/arduino-oled-misaki/",
+                  "name": "Arduino と OLED で日本語を表示する"
+                }
+              }
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://font-to-bin.takushio2525.com/#website",
+            "name": "Font to Binary Converter",
+            "url": "https://font-to-bin.takushio2525.com/"
+          },
+          {
+            "@type": "Person",
+            "@id": "https://takushio2525.com/#person",
+            "name": "takushio2525",
+            "url": "https://takushio2525.com/profile/",
+            "sameAs": [
+              "https://github.com/takushio2525"
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <header class="border-b bg-card/50">
+      <div class="container mx-auto flex h-14 items-center justify-between gap-3 px-4">
+        <a href="/" class="flex min-w-0 items-center gap-2 font-bold">
+          <img src="/favicon.svg" width="28" height="28" alt="" />
+          <span class="truncate">Font to Binary Converter</span>
+        </a>
+        <a href="/" class="shrink-0 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90">ツールを開く</a>
+      </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6">
+      <nav aria-label="パンくずリスト" class="mb-5 text-xs text-muted-foreground">
+        <ol class="flex flex-wrap items-center gap-1">
+          <li><a class="underline hover:text-foreground" href="/">Font to Binary Converter</a></li>
+          <li aria-hidden="true">›</li>
+          <li aria-current="page">Arduino と OLED で日本語を表示する</li>
+        </ol>
+      </nav>
+
+      <div class="guide-layout">
+        <article class="guide-article">
+          <h1>Arduino と OLED（SSD1306）で日本語を表示する：美咲フォント 8×8 を配列にして drawBitmap で描く</h1>
+          <p class="guide-meta">
+            公開: <time datetime="2026-09-29">2026/09/29</time>
+            
+            · 作者: <a href="https://takushio2525.com/">takushio2525</a>
+          </p>
+          <p class="guide-lead">
+            メニューの項目や「こんにちは」のような決まった言葉だけを OLED に出したいなら、日本語フォントを丸ごと入れなくても、使う文字のドットだけを配列で持てば足ります。美咲フォントなら 1 文字 8 バイトなので、5 文字でも 40 バイトです。この記事では、Font to Binary Converter でその配列を作り、Arduino Uno と SSD1306 の OLED に表示するまでを説明します。
+          </p>
+
+          <div class="glyph-figs"><span class="glyph-fig"><svg viewBox="0 0 8 8" width="96" height="96" role="img" aria-label="「こ」の 8×8 ドット" shape-rendering="crispEdges"><rect width="8" height="8" fill="#0b1221"/><g fill="#ffdd55"><rect x="1" y="1" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="3" y="1" width="1" height="1"/><rect x="4" y="1" width="1" height="1"/><rect x="5" y="1" width="1" height="1"/><rect x="1" y="4" width="1" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="1" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="3" y="6" width="1" height="1"/><rect x="4" y="6" width="1" height="1"/><rect x="5" y="6" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/></g><path d="M1 0V8M2 0V8M3 0V8M4 0V8M5 0V8M6 0V8M7 0V8M0 1H8M0 2H8M0 3H8M0 4H8M0 5H8M0 6H8M0 7H8" stroke="#ffffff" stroke-opacity="0.12" stroke-width="0.06" fill="none"/></svg><span>こ</span></span><span class="glyph-fig"><svg viewBox="0 0 8 8" width="96" height="96" role="img" aria-label="「ん」の 8×8 ドット" shape-rendering="crispEdges"><rect width="8" height="8" fill="#0b1221"/><g fill="#ffdd55"><rect x="3" y="0" width="1" height="1"/><rect x="3" y="1" width="1" height="1"/><rect x="2" y="2" width="1" height="1"/><rect x="2" y="3" width="1" height="1"/><rect x="3" y="3" width="1" height="1"/><rect x="1" y="4" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="6" y="4" width="1" height="1"/><rect x="1" y="5" width="1" height="1"/><rect x="4" y="5" width="1" height="1"/><rect x="6" y="5" width="1" height="1"/><rect x="0" y="6" width="1" height="1"/><rect x="5" y="6" width="1" height="1"/></g><path d="M1 0V8M2 0V8M3 0V8M4 0V8M5 0V8M6 0V8M7 0V8M0 1H8M0 2H8M0 3H8M0 4H8M0 5H8M0 6H8M0 7H8" stroke="#ffffff" stroke-opacity="0.12" stroke-width="0.06" fill="none"/></svg><span>ん</span></span><span class="glyph-fig"><svg viewBox="0 0 8 8" width="96" height="96" role="img" aria-label="「に」の 8×8 ドット" shape-rendering="crispEdges"><rect width="8" height="8" fill="#0b1221"/><g fill="#ffdd55"><rect x="0" y="0" width="1" height="1"/><rect x="0" y="1" width="1" height="1"/><rect x="3" y="1" width="1" height="1"/><rect x="4" y="1" width="1" height="1"/><rect x="5" y="1" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="3" y="4" width="1" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="1" height="1"/><rect x="0" y="6" width="1" height="1"/><rect x="3" y="6" width="1" height="1"/><rect x="4" y="6" width="1" height="1"/><rect x="5" y="6" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/></g><path d="M1 0V8M2 0V8M3 0V8M4 0V8M5 0V8M6 0V8M7 0V8M0 1H8M0 2H8M0 3H8M0 4H8M0 5H8M0 6H8M0 7H8" stroke="#ffffff" stroke-opacity="0.12" stroke-width="0.06" fill="none"/></svg><span>に</span></span><span class="glyph-fig"><svg viewBox="0 0 8 8" width="96" height="96" role="img" aria-label="「ち」の 8×8 ドット" shape-rendering="crispEdges"><rect width="8" height="8" fill="#0b1221"/><g fill="#ffdd55"><rect x="2" y="0" width="1" height="1"/><rect x="0" y="1" width="1" height="1"/><rect x="1" y="1" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="3" y="1" width="1" height="1"/><rect x="4" y="1" width="1" height="1"/><rect x="5" y="1" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="2" y="2" width="1" height="1"/><rect x="1" y="3" width="1" height="1"/><rect x="3" y="3" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="1" y="4" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/><rect x="6" y="4" width="1" height="1"/><rect x="5" y="5" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="3" y="6" width="1" height="1"/><rect x="4" y="6" width="1" height="1"/></g><path d="M1 0V8M2 0V8M3 0V8M4 0V8M5 0V8M6 0V8M7 0V8M0 1H8M0 2H8M0 3H8M0 4H8M0 5H8M0 6H8M0 7H8" stroke="#ffffff" stroke-opacity="0.12" stroke-width="0.06" fill="none"/></svg><span>ち</span></span><span class="glyph-fig"><svg viewBox="0 0 8 8" width="96" height="96" role="img" aria-label="「は」の 8×8 ドット" shape-rendering="crispEdges"><rect width="8" height="8" fill="#0b1221"/><g fill="#ffdd55"><rect x="0" y="0" width="1" height="1"/><rect x="4" y="0" width="1" height="1"/><rect x="0" y="1" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="3" y="1" width="1" height="1"/><rect x="4" y="1" width="1" height="1"/><rect x="5" y="1" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="4" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/><rect x="3" y="4" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="1" y="5" width="1" height="1"/><rect x="4" y="5" width="1" height="1"/><rect x="5" y="5" width="1" height="1"/><rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="3" y="6" width="1" height="1"/><rect x="4" y="6" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/></g><path d="M1 0V8M2 0V8M3 0V8M4 0V8M5 0V8M6 0V8M7 0V8M0 1H8M0 2H8M0 3H8M0 4H8M0 5H8M0 6H8M0 7H8" stroke="#ffffff" stroke-opacity="0.12" stroke-width="0.06" fill="none"/></svg><span>は</span></span></div>
+
+          <section>
+            <h2 id="fit">この方法が向いている場面</h2>
+            <ul>
+              <li><strong>向いている</strong>: 表示する文字が前もって決まっているとき（メニュー、状態の表示、あいさつ、単位など）。使う文字の分のデータだけで済むので、フラッシュの小さいマイコンでも収まります。</li>
+              <li><strong>向いていない</strong>: 受け取った文章をそのまま表示するなど、どの文字が来るか分からないとき。この場合は、フォント全体を持つ表示ライブラリを使うほうが確実です。</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 id="parts">用意するもの</h2>
+            <ul>
+              <li>Arduino Uno（ATmega328P）など。この記事のスケッチは、Arduino IDE 同梱の arduino-cli で Uno 向けにコンパイルできることを確かめています</li>
+              <li>SSD1306 を使った 128×64 ドットの OLED モジュール（I2C 接続）。Uno では SDA を A4、SCL を A5 につなぎます</li>
+              <li>Arduino IDE のライブラリマネージャで入れる「Adafruit SSD1306」と「Adafruit GFX Library」（依存する Adafruit BusIO も一緒に入れます）</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 id="make">配列を作る</h2>
+            <ol>
+              <li><a href="/">Font to Binary Converter</a> を開き、「かんたん」モードのまま使います</li>
+              <li>「1 変換したい文字」に <code>こんにちは</code> と入力します</li>
+              <li>「2 見た目」のフォントで「Misaki Gothic (8x8)」を選びます（ドットサイズも 8 になります）</li>
+              <li>「3 出力フォーマット」で「Arduino / C言語」を選び、出力の「コピー」を押します</li>
+            </ol>
+            <p>出力は次のようになります（ツールで実際に出したものです）。</p>
+            <pre><code>const uint8_t font_data[] PROGMEM = {
+  // char: "こ" (8x8)
+  // ........
+  // .#####..
+  // ........
+  // ........
+  // .#......
+  // #.......
+  // .######.
+  // ........
+  0x00, 0x7C, 0x00, 0x00, 0x40, 0x80, 0x7E, 0x00,
+  // char: "ん" (8x8)
+  // ...#....
+  // ...#....
+  // ..#.....
+  // ..##....
+  // .#..#.#.
+  // .#..#.#.
+  // #....#..
+  // ........
+  0x10, 0x10, 0x20, 0x30, 0x4A, 0x4A, 0x84, 0x00,
+  // char: "に" (8x8)
+  // #.......
+  // #..###..
+  // #.......
+  // #.......
+  // #..#....
+  // #.#.....
+  // #..####.
+  // ........
+  0x80, 0x9C, 0x80, 0x80, 0x90, 0xA0, 0x9E, 0x00,
+  // char: "ち" (8x8)
+  // ..#.....
+  // #######.
+  // ..#.....
+  // .#.###..
+  // .##...#.
+  // .....#..
+  // ..###...
+  // ........
+  0x20, 0xFE, 0x20, 0x5C, 0x62, 0x04, 0x38, 0x00,
+  // char: "は" (8x8)
+  // #...#...
+  // #.#####.
+  // #...#...
+  // #...#...
+  // #.###...
+  // ##..##..
+  // #.###.#.
+  // ........
+  0x88, 0xBE, 0x88, 0x88, 0xB8, 0xCC, 0xBA, 0x00
+};</code></pre>
+            <p>
+              1 文字ぶんは、コメントのドット絵（<code>#</code> が点灯）と 8 個の数値です。数値 1 つが横 1 行の 8 ドットで、左端のドットが最上位ビット（<code>0x80</code>）に入っています。たとえば「こ」の 2 行目 <code>.#####..</code> は 2 進で <code>01111100</code>、16 進で <code>0x7C</code> です。<code>PROGMEM</code> が付いているので、配列は SRAM ではなくフラッシュメモリに置かれます。
+            </p>
+          </section>
+
+          <section>
+            <h2 id="sketch">スケッチ</h2>
+            <p>出力を貼り付けたスケッチの全体です。画面の左上から 5 文字を横に並べて描きます。</p>
+            <pre><code>#include &lt;Wire.h&gt;
+#include &lt;Adafruit_GFX.h&gt;
+#include &lt;Adafruit_SSD1306.h&gt;
+
+// 128×64 ドット・I2C 接続の OLED。リセットピンは使わない（-1）
+Adafruit_SSD1306 display(128, 64, &amp;Wire, -1);
+
+// ↓ Font to Binary Converter の出力をそのまま貼る
+const uint8_t font_data[] PROGMEM = {
+  // char: "こ" (8x8)
+  // ........
+  // .#####..
+  // ........
+  // ........
+  // .#......
+  // #.......
+  // .######.
+  // ........
+  0x00, 0x7C, 0x00, 0x00, 0x40, 0x80, 0x7E, 0x00,
+  // char: "ん" (8x8)
+  // ...#....
+  // ...#....
+  // ..#.....
+  // ..##....
+  // .#..#.#.
+  // .#..#.#.
+  // #....#..
+  // ........
+  0x10, 0x10, 0x20, 0x30, 0x4A, 0x4A, 0x84, 0x00,
+  // char: "に" (8x8)
+  // #.......
+  // #..###..
+  // #.......
+  // #.......
+  // #..#....
+  // #.#.....
+  // #..####.
+  // ........
+  0x80, 0x9C, 0x80, 0x80, 0x90, 0xA0, 0x9E, 0x00,
+  // char: "ち" (8x8)
+  // ..#.....
+  // #######.
+  // ..#.....
+  // .#.###..
+  // .##...#.
+  // .....#..
+  // ..###...
+  // ........
+  0x20, 0xFE, 0x20, 0x5C, 0x62, 0x04, 0x38, 0x00,
+  // char: "は" (8x8)
+  // #...#...
+  // #.#####.
+  // #...#...
+  // #...#...
+  // #.###...
+  // ##..##..
+  // #.###.#.
+  // ........
+  0x88, 0xBE, 0x88, 0x88, 0xB8, 0xCC, 0xBA, 0x00
+};
+
+const uint8_t CHAR_W = 8;  // 1 文字の幅（ドット）
+const uint8_t CHAR_H = 8;  // 1 文字の高さ（ドット）
+const uint8_t BYTES_PER_CHAR = (CHAR_W + 7) / 8 * CHAR_H;  // 1 文字のバイト数（8×8 なら 8）
+const uint8_t CHAR_COUNT = sizeof(font_data) / BYTES_PER_CHAR;
+
+void setup() {
+  // 128×64 のモジュールの多くは I2C アドレス 0x3C（0x3D のものもある）
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    for (;;) {}  // 初期化に失敗したら止める（配線とアドレスを確かめる）
+  }
+  display.clearDisplay();
+  for (uint8_t i = 0; i &lt; CHAR_COUNT; i++) {
+    // i 文字目のデータの先頭を渡して、8×8 のビットマップとして描く
+    display.drawBitmap(i * CHAR_W, 0, font_data + i * BYTES_PER_CHAR, CHAR_W, CHAR_H, SSD1306_WHITE);
+  }
+  display.display();  // ここで初めて画面に送られる
+}
+
+void loop() {}</code></pre>
+            <ul>
+              <li><code>drawBitmap</code> の 3 番目の引数に、<code>font_data + i * BYTES_PER_CHAR</code>（i 文字目のデータの先頭）を渡しています。<code>const uint8_t</code> の配列を渡すと、<code>drawBitmap</code> はフラッシュから読み出す処理（<code>pgm_read_byte</code>）で読むので、PROGMEM の配列をそのまま渡せます。</li>
+              <li><code>display.display()</code> を呼ぶまで、画面は変わりません。<code>drawBitmap</code> は画面バッファに描くだけです。</li>
+              <li>Adafruit_SSD1306 は <code>begin()</code> のときに、128×64 なら 1,024 バイトの画面バッファを確保します。Uno の SRAM は 2,048 バイトしかないので、フォントのデータを PROGMEM でフラッシュに置いておくのが大事です。このスケッチをコンパイルすると、グローバル変数は 344 バイトでした（画面バッファは実行時に確保されるので、この数字には入りません）。</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 id="why">なぜこの設定で合うのか</h2>
+            <p>
+              Adafruit_GFX の <code>drawBitmap</code> は、ビットマップを上の行から順に読み、1 行を「(幅 + 7) / 8」バイトとして、各バイトの最上位ビット（<code>0x80</code>）から左→右へ描きます（ライブラリの Adafruit_GFX.cpp の <code>drawBitmap</code> でこの処理を確かめられます）。「Arduino / C言語」の出力は次の設定なので、この読み方とそのまま一致します。
+            </p>
+            <table>
+              <thead>
+                <tr><th>設定</th><th>値</th><th>意味</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>構造</td><td>ビットパック（行方向）</td><td>横に並んだ 8 ドットを 1 バイトに詰める</td></tr>
+                <tr><td>ビット順</td><td>MSB first</td><td>左端のドットを最上位ビットに入れる</td></tr>
+                <tr><td>表記</td><td>16進数</td><td>書き方だけの違いで、10 進・2 進にしても値は同じ</td></tr>
+              </tbody>
+            </table>
+            <p>
+              幅が 8 の倍数でないとき（たとえば 12 ドット）は 1 行が 2 バイトになり、余ったビットは 0 で埋まります。<code>drawBitmap</code> も 1 行を「(幅 + 7) / 8」バイトとして読むので、このときもそのまま渡せます。スケッチの <code>BYTES_PER_CHAR</code> も同じ式で計算しています。並び方の詳しい説明は「<a href="/guide/output-format/">出力の読み方</a>」にまとめています。
+            </p>
+          </section>
+
+          <section>
+            <h2 id="bigger">文字を大きく表示する</h2>
+            <p>8×8 の文字は、128×64 の画面に 1 行 16 文字入る大きさで、小さく感じることがあります。大きくする方法は 2 つあります。</p>
+            <h3>DotGothic16（16×16）で作り直す</h3>
+            <p>
+              フォントで「DotGothic16 (16x16)」を選ぶと、ドットサイズが 16 になり、1 文字 32 バイトの配列になります。スケッチの <code>CHAR_W</code> と <code>CHAR_H</code> を 16 に変えれば、<code>BYTES_PER_CHAR</code> は自動で 32 になり、同じ <code>drawBitmap</code> で描けます。
+            </p>
+            <h3>8×8 のデータのまま、1 ドットを 2×2 に広げて描く</h3>
+            <p>データを増やさずに大きく見せたいときは、1 ドットを <code>fillRect</code> で 2×2 の四角として描きます。上のスケッチに次の関数を足し、<code>drawBitmap</code> の代わりに <code>drawChar2x(i * 16, 0, font_data + i * 8)</code> のように呼びます。</p>
+            <pre><code>// 1 ドットを 2×2 に広げて描く（8×8 の文字を 16×16 の大きさで表示する）
+void drawChar2x(int16_t x, int16_t y, const uint8_t *glyph) {
+  for (uint8_t row = 0; row &lt; 8; row++) {
+    uint8_t bits = pgm_read_byte(glyph + row);  // 1 行ぶん（bit7 が左端）
+    for (uint8_t col = 0; col &lt; 8; col++) {
+      if (bits &amp; (0x80 &gt;&gt; col)) {
+        display.fillRect(x + col * 2, y + row * 2, 2, 2, SSD1306_WHITE);
+      }
+    }
+  }
+}</code></pre>
+            <p>この関数は、配列の読み方（1 バイト = 1 行、<code>bit7</code> が左端）をそのまま書いたものです。3 倍・4 倍にしたいときは、2 のところを変えます。</p>
+          </section>
+
+          <section>
+            <h2 id="u8g2">U8g2 を使う場合</h2>
+            <p>
+              U8g2 ライブラリで描くときは、<code>drawXBMP</code> を使います。<code>drawXBMP</code> は XBM 形式、つまり各バイトの<strong>最下位ビットが左端</strong>のデータを読みます（u8g2_bitmap.c の <code>u8g2_DrawHXBMP</code>）。そのため、ツールで「詳細」モードに切り替え、「ビット順」を「LSB first」にして出力し直します。
+            </p>
+            <pre><code>#include &lt;U8g2lib.h&gt;
+#include &lt;Wire.h&gt;
+
+// 128×64・I2C 接続の SSD1306。F はバッファを全画面ぶん持つ版
+U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+
+// ↓ ビット順を LSB first にして出力したもの
+const uint8_t font_data[] PROGMEM = {
+  // char: "こ" (8x8)
+  // ........
+  // .#####..
+  // ........
+  // ........
+  // .#......
+  // #.......
+  // .######.
+  // ........
+  0x00, 0x3E, 0x00, 0x00, 0x02, 0x01, 0x7E, 0x00,
+  // char: "ん" (8x8)
+  // ...#....
+  // ...#....
+  // ..#.....
+  // ..##....
+  // .#..#.#.
+  // .#..#.#.
+  // #....#..
+  // ........
+  0x08, 0x08, 0x04, 0x0C, 0x52, 0x52, 0x21, 0x00,
+  // char: "に" (8x8)
+  // #.......
+  // #..###..
+  // #.......
+  // #.......
+  // #..#....
+  // #.#.....
+  // #..####.
+  // ........
+  0x01, 0x39, 0x01, 0x01, 0x09, 0x05, 0x79, 0x00,
+  // char: "ち" (8x8)
+  // ..#.....
+  // #######.
+  // ..#.....
+  // .#.###..
+  // .##...#.
+  // .....#..
+  // ..###...
+  // ........
+  0x04, 0x7F, 0x04, 0x3A, 0x46, 0x20, 0x1C, 0x00,
+  // char: "は" (8x8)
+  // #...#...
+  // #.#####.
+  // #...#...
+  // #...#...
+  // #.###...
+  // ##..##..
+  // #.###.#.
+  // ........
+  0x11, 0x7D, 0x11, 0x11, 0x1D, 0x33, 0x5D, 0x00
+};
+
+void setup() {
+  u8g2.begin();
+  u8g2.clearBuffer();
+  for (uint8_t i = 0; i &lt; sizeof(font_data) / 8; i++) {
+    u8g2.drawXBMP(i * 8, 0, 8, 8, font_data + i * 8);
+  }
+  u8g2.sendBuffer();
+}
+
+void loop() {}</code></pre>
+            <ul>
+              <li>
+                U8g2 には <code>drawBitmap</code> もありますが、この関数はフラッシュから読み出す処理を通らず、ポインタの先をそのまま読みます。そのため、Uno などの AVR で PROGMEM に置いた配列には使えません。PROGMEM の配列は <code>drawXBMP</code> で描きます。
+              </li>
+              <li>
+                コンストラクタ名に <code>_F_</code> が付く版は画面バッファ 1,024 バイトを最初から確保するので、このスケッチのグローバル変数は 1,556 バイト（Uno の SRAM の 75%）でした。メモリが足りなくなったら、<code>_1_</code> や <code>_2_</code> が付くページバッファ版に替える方法があります（描き方が <code>firstPage()</code> / <code>nextPage()</code> のループに変わります）。
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 id="trouble">うまく表示されないとき</h2>
+            <table>
+              <thead>
+                <tr><th>症状</th><th>確かめること</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>何も表示されない</td><td>I2C アドレス（多くは <code>0x3C</code>、モジュールによっては <code>0x3D</code>）、配線（Uno は SDA が A4・SCL が A5）、<code>display.display()</code> の呼び忘れ</td></tr>
+                <tr><td>文字が左右反転して見える</td><td>ビット順。<code>drawBitmap</code> は MSB first、<code>drawXBMP</code> は LSB first のデータを読む</td></tr>
+                <tr><td>文字が斜めにずれて崩れる</td><td>ツールで選んだドットサイズと、スケッチの <code>CHAR_W</code>・<code>CHAR_H</code> が揃っているか</td></tr>
+                <tr><td>違う文字が出る</td><td>配列の文字は入力した順に並ぶ。コメントの <code>char:</code> で順番を確かめる</td></tr>
+                <tr><td>動きが不安定・勝手に再起動する</td><td>SRAM の不足。配列に <code>PROGMEM</code> が付いているか、ほかに大きな配列を SRAM に置いていないか</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section>
+            <h2 id="misaki">美咲フォントについて</h2>
+            <p>
+              美咲フォントは、門真なむ氏が作った 8×8 ドットの日本語ビットマップフォントで、JIS 第一・第二水準の漢字を収めています。一部の記号を除いてすべての文字が 7×7 ドットの範囲に収まっているので、文字を隙間なく並べても字間と行間が空きます（<a href="https://littlelimit.net/misaki.htm">配布元</a>の説明より）。上の出力でも、どの文字も右端の列と一番下の行が空いています。
+            </p>
+            <p>
+              Font to Binary Converter に同梱しているのは「美咲ゴシック第2」（misaki_gothic_2nd.ttf）で、半角文字は 3×7 ドット、全角の仮名は 7×7 ドットをいっぱいに使う字形です。美咲フォントは作者の定めるライセンスで配布されています。作品や製品に使うときは、配布元のライセンスの説明を確かめてください。
+            </p>
+            <p>LED マトリクスに出したいときは「<a href="/guide/led-matrix-max7219/">8×8 LED マトリクスに文字を出す</a>」を参考にしてください。</p>
+          </section>
+        </article>
+
+        <!-- 右の列（幅 300px）。将来の広告枠はこの列か、本文の section の間に高さを決めて置く -->
+        <aside class="guide-aside">
+          <div class="guide-aside-sticky space-y-5">
+            <nav aria-labelledby="toc-title" class="rounded-lg border bg-card p-4">
+              <h2 id="toc-title" class="mb-2 font-bold">この記事の内容</h2>
+              <ol class="list-decimal space-y-1 pl-5"><li><a href="#fit">この方法が向いている場面</a></li><li><a href="#parts">用意するもの</a></li><li><a href="#make">配列を作る</a></li><li><a href="#sketch">スケッチ</a></li><li><a href="#why">なぜこの設定で合うのか</a></li><li><a href="#bigger">文字を大きく表示する</a></li><li><a href="#u8g2">U8g2 を使う場合</a></li><li><a href="#trouble">うまく表示されないとき</a></li><li><a href="#misaki">美咲フォントについて</a></li></ol>
+            </nav>
+            <div class="rounded-lg border bg-card p-4">
+              <h2 class="mb-2 font-bold">ほかのガイド</h2>
+              <ul class="list-disc space-y-1 pl-5"><li><a href="/guide/led-matrix-max7219/">8×8 LED マトリクスに文字を出す</a></li><li><a href="/guide/output-format/">出力の読み方</a></li></ul>
+            </div>
+            <div class="rounded-lg border bg-card p-4">
+              <p class="mb-3">文字を入力するだけで、C / Arduino / Python などの配列を作れます。インストールは要りません。</p>
+              <a href="/" class="inline-block rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground no-underline hover:opacity-90">Font to Binary Converter を開く</a>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="mt-10 border-t">
+      <div class="container mx-auto px-4 py-4 text-center text-xs text-muted-foreground">
+        Fonts: DotGothic16, Misaki Gothic 2nd ·
+        <a class="underline hover:text-foreground" href="https://github.com/takushio2525/font-to-bin">GitHub</a>
+        ·
+        <a class="underline hover:text-foreground" href="https://takushio2525.com/">作者: takushio2525</a>
+        ·
+        <a class="underline hover:text-foreground" href="https://takushio2525.com/privacy/">プライバシーポリシー</a>
+        ·
+        <a class="underline hover:text-foreground" href="https://takushio2525.com/privacy/#cookie" data-tk-consent-open="">Cookie 設定</a>
+      </div>
+    </footer>
+  </body>
+</html>

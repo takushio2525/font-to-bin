@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Content-Security-Policy の meta はビルド時に csp.ts が <meta charset> の直後へ差し込む -->
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <script src="/theme-init.js"></script>
+
+    <!-- Cookie 同意と GA4 はツール本体（/index.html）と同じ順番で読む -->
+    <script src="https://takushio2525.com/consent/consent.js"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-30GVXMB0GH"></script>
+    <script src="/ga-init.js"></script>
+    <meta name="google-adsense-account" content="ca-pub-3136871606832456" />
+
+    <title>ドットフォントの配列の読み方：行方向・列方向のビットパックと MSB / LSB | Font to Binary Converter</title>
+    <meta name="description" content="ドットフォントの配列の並び方（0 と 1 の配列、行方向・列方向のビットパック、MSB first と LSB first）を実際の出力で説明。Adafruit_GFX・U8g2・MicroPython の framebuf・LedControl・SSD1306 に合わせる設定の対応表つき。" />
+    <link rel="canonical" href="https://font-to-bin.takushio2525.com/guide/output-format/" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Font to Binary Converter" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:title" content="ドットフォントの配列の読み方：行方向・列方向のビットパックと MSB / LSB" />
+    <meta property="og:description" content="ドットフォントの配列の並び方（0 と 1 の配列、行方向・列方向のビットパック、MSB first と LSB first）を実際の出力で説明。Adafruit_GFX・U8g2・MicroPython の framebuf・LedControl・SSD1306 に合わせる設定の対応表つき。" />
+    <meta property="og:url" content="https://font-to-bin.takushio2525.com/guide/output-format/" />
+    <meta property="og:image" content="https://font-to-bin.takushio2525.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Font to Binary Converter の操作画面" />
+    <meta property="article:published_time" content="2026-09-29" />
+    <meta property="article:modified_time" content="2026-09-29" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ドットフォントの配列の読み方：行方向・列方向のビットパックと MSB / LSB" />
+    <meta name="twitter:description" content="ドットフォントの配列の並び方（0 と 1 の配列、行方向・列方向のビットパック、MSB first と LSB first）を実際の出力で説明。Adafruit_GFX・U8g2・MicroPython の framebuf・LedControl・SSD1306 に合わせる設定の対応表つき。" />
+    <meta name="twitter:image" content="https://font-to-bin.takushio2525.com/og-image.png" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#1B3A5C" />
+    <link rel="stylesheet" href="/src/guide.css" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "TechArticle",
+            "@id": "https://font-to-bin.takushio2525.com/guide/output-format/#article",
+            "headline": "ドットフォントの配列の読み方：行方向・列方向のビットパックと MSB / LSB",
+            "description": "ドットフォントの配列の並び方（0 と 1 の配列、行方向・列方向のビットパック、MSB first と LSB first）を実際の出力で説明。Adafruit_GFX・U8g2・MicroPython の framebuf・LedControl・SSD1306 に合わせる設定の対応表つき。",
+            "datePublished": "2026-09-29",
+            "dateModified": "2026-09-29",
+            "inLanguage": "ja",
+            "author": {
+              "@id": "https://takushio2525.com/#person"
+            },
+            "publisher": {
+              "@id": "https://takushio2525.com/#person"
+            },
+            "image": "https://font-to-bin.takushio2525.com/og-image.png",
+            "mainEntityOfPage": "https://font-to-bin.takushio2525.com/guide/output-format/",
+            "isPartOf": {
+              "@id": "https://font-to-bin.takushio2525.com/#website"
+            },
+            "about": [
+              {
+                "@type": "Thing",
+                "name": "ビットマップフォント"
+              },
+              {
+                "@type": "Thing",
+                "name": "ビットパック"
+              },
+              {
+                "@type": "Thing",
+                "name": "SSD1306"
+              },
+              {
+                "@type": "Thing",
+                "name": "MicroPython"
+              }
+            ]
+          },
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Font to Binary Converter",
+                "item": {
+                  "@type": "WebPage",
+                  "@id": "https://font-to-bin.takushio2525.com/",
+                  "name": "Font to Binary Converter"
+                }
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "出力の読み方",
+                "item": {
+                  "@type": "WebPage",
+                  "@id": "https://font-to-bin.takushio2525.com/guide/output-format/",
+                  "name": "出力の読み方"
+                }
+              }
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://font-to-bin.takushio2525.com/#website",
+            "name": "Font to Binary Converter",
+            "url": "https://font-to-bin.takushio2525.com/"
+          },
+          {
+            "@type": "Person",
+            "@id": "https://takushio2525.com/#person",
+            "name": "takushio2525",
+            "url": "https://takushio2525.com/profile/",
+            "sameAs": [
+              "https://github.com/takushio2525"
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <header class="border-b bg-card/50">
+      <div class="container mx-auto flex h-14 items-center justify-between gap-3 px-4">
+        <a href="/" class="flex min-w-0 items-center gap-2 font-bold">
+          <img src="/favicon.svg" width="28" height="28" alt="" />
+          <span class="truncate">Font to Binary Converter</span>
+        </a>
+        <a href="/" class="shrink-0 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90">ツールを開く</a>
+      </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6">
+      <nav aria-label="パンくずリスト" class="mb-5 text-xs text-muted-foreground">
+        <ol class="flex flex-wrap items-center gap-1">
+          <li><a class="underline hover:text-foreground" href="/">Font to Binary Converter</a></li>
+          <li aria-hidden="true">›</li>
+          <li aria-current="page">出力の読み方</li>
+        </ol>
+      </nav>
+
+      <div class="guide-layout">
+        <article class="guide-article">
+          <h1>ドットフォントの配列の読み方：行方向・列方向のビットパックと MSB / LSB</h1>
+          <p class="guide-meta">
+            公開: <time datetime="2026-09-29">2026/09/29</time>
+            
+            · 作者: <a href="https://takushio2525.com/">takushio2525</a>
+          </p>
+          <p class="guide-lead">
+            ドットフォントの配列は、同じ文字でも「どの向きにドットを詰めるか」「1 バイトのどちらの端から詰めるか」で数値がまったく変わります。表示に使うライブラリが期待する並びと違うと、文字が反転したり崩れたりします。ここでは美咲フォントの「A」（8×8）を例に、Font to Binary Converter の出力の読み方と、ライブラリごとに選ぶ設定をまとめます。
+          </p>
+
+          <figure>
+            <svg viewBox="0 0 8 8" width="128" height="128" role="img" aria-label="「A」の 8×8 ドット" shape-rendering="crispEdges"><rect width="8" height="8" fill="#0b1221"/><g fill="#ffdd55"><rect x="3" y="0" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="4" y="1" width="1" height="1"/><rect x="2" y="2" width="1" height="1"/><rect x="4" y="2" width="1" height="1"/><rect x="2" y="3" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/><rect x="3" y="4" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="2" y="5" width="1" height="1"/><rect x="4" y="5" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="4" y="6" width="1" height="1"/></g><path d="M1 0V8M2 0V8M3 0V8M4 0V8M5 0V8M6 0V8M7 0V8M0 1H8M0 2H8M0 3H8M0 4H8M0 5H8M0 6H8M0 7H8" stroke="#ffffff" stroke-opacity="0.12" stroke-width="0.06" fill="none"/></svg>
+            <figcaption>美咲フォントの「A」（8×8）。以下の例はすべてこの文字をツールで変換したものです</figcaption>
+          </figure>
+
+          <section>
+            <h2 id="matrix">0 と 1 の表（3 次元配列）</h2>
+            <p>かんたんモードの「C言語（見やすい2D）」は、ドットをそのまま 0 と 1 で並べます。<code>[文字][行][列]</code> の 3 次元配列で、1 が点灯するドットです。</p>
+            <pre><code>const uint8_t font_data[1][8][8] = {
+      // char: "A" (8x8)
+      // ...#....
+      // ..#.#...
+      // ..#.#...
+      // ..#.#...
+      // ..###...
+      // ..#.#...
+      // ..#.#...
+      // ........
+    {
+        {0, 0, 0, 1, 0, 0, 0, 0},
+        {0, 0, 1, 0, 1, 0, 0, 0},
+        {0, 0, 1, 0, 1, 0, 0, 0},
+        {0, 0, 1, 0, 1, 0, 0, 0},
+        {0, 0, 1, 1, 1, 0, 0, 0},
+        {0, 0, 1, 0, 1, 0, 0, 0},
+        {0, 0, 1, 0, 1, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0}
+    }
+};</code></pre>
+            <p>
+              読みやすい反面、1 ドットに 1 バイト（<code>uint8_t</code>）を使うので、8×8 で 64 バイト、16×16 では 256 バイトになります。マイコンで使うときは、次のビットパックで 8 ドットを 1 バイトに詰めるのが普通です。
+            </p>
+          </section>
+
+          <section>
+            <h2 id="row">行方向のビットパック</h2>
+            <p>横 1 行の 8 ドットを 1 バイトに詰めます。1 文字のデータは、上の行から順に並びます。詳細モードの「構造」で「ビットパック（行方向）」を選ぶと、この形になります。</p>
+            <pre><code>const uint8_t font_data[] = {
+  // char: "A" (8x8)
+  // ...#....
+  // ..#.#...
+  // ..#.#...
+  // ..#.#...
+  // ..###...
+  // ..#.#...
+  // ..#.#...
+  // ........
+  0b00010000, 0b00101000, 0b00101000, 0b00101000, 0b00111000, 0b00101000, 0b00101000, 0b00000000
+};</code></pre>
+            <h3>MSB first と LSB first</h3>
+            <p>
+              「ビット順」は、行の<strong>左端のドットを 1 バイトのどちらの端に置くか</strong>を決めます。MSB first は左端を最上位ビット（<code>bit7</code>）に、LSB first は左端を最下位ビット（<code>bit0</code>）に置きます。同じ行 <code>...#....</code> でも、MSB first なら <code>0b00010000</code>（<code>0x10</code>）、LSB first なら <code>0b00001000</code>（<code>0x08</code>）です。
+            </p>
+            <table><thead><tr><th>行</th><th>ドット</th><th>MSB first</th><th>LSB first</th></tr></thead><tbody><tr><td>0</td><td><code>...#....</code></td><td><code>0x10</code></td><td><code>0x08</code></td></tr><tr><td>1</td><td><code>..#.#...</code></td><td><code>0x28</code></td><td><code>0x14</code></td></tr><tr><td>2</td><td><code>..#.#...</code></td><td><code>0x28</code></td><td><code>0x14</code></td></tr><tr><td>3</td><td><code>..#.#...</code></td><td><code>0x28</code></td><td><code>0x14</code></td></tr><tr><td>4</td><td><code>..###...</code></td><td><code>0x38</code></td><td><code>0x1C</code></td></tr><tr><td>5</td><td><code>..#.#...</code></td><td><code>0x28</code></td><td><code>0x14</code></td></tr><tr><td>6</td><td><code>..#.#...</code></td><td><code>0x28</code></td><td><code>0x14</code></td></tr><tr><td>7</td><td><code>........</code></td><td><code>0x00</code></td><td><code>0x00</code></td></tr></tbody></table>
+            <h3>幅が 8 の倍数でないとき</h3>
+            <p>
+              1 行に「幅 ÷ 8 の切り上げ」バイトを使い、余ったビットは 0 で埋めます。次の 12×12 の例では 1 行が 2 バイトになり、MSB first なので各行の 2 バイト目の下位 4 ビットは常に 0 です（「A」の形が粗いのは、16×16 用に作られた DotGothic16 を 12 ドットに縮めたためです。フォントは推奨の大きさ、美咲フォントなら 8、DotGothic16 なら 16 で使うときれいに出ます）。
+            </p>
+            <pre><code>const uint8_t font_data[] = {
+  // char: "A" (12x12)
+  // ............
+  // .....##.....
+  // .....##.....
+  // .....##.....
+  // .....##.....
+  // ....####....
+  // ....#..#....
+  // ....#..#....
+  // ....####....
+  // ...##...#...
+  // ...#....#...
+  // ............
+  0b00000000, 0b00000000, 0b00000110, 0b00000000, 0b00000110, 0b00000000, 0b00000110, 0b00000000, 0b00000110, 0b00000000, 0b00001111, 0b00000000, 0b00001001, 0b00000000, 0b00001001, 0b00000000,
+  0b00001111, 0b00000000, 0b00011000, 0b10000000, 0b00010000, 0b10000000, 0b00000000, 0b00000000
+};</code></pre>
+            <p class="guide-note">1 文字のバイト数 = 「幅 ÷ 8 の切り上げ」× 高さ。8×8 なら 8 バイト、12×12 なら 24 バイト、16×16 なら 32 バイトです。</p>
+          </section>
+
+          <section>
+            <h2 id="col">列方向のビットパック</h2>
+            <p>
+              縦 1 列の 8 ドットを 1 バイトに詰めます。1 文字のデータは、左の列から順に並びます。ビット順は、MSB first なら<strong>上端</strong>のドットが <code>bit7</code>、LSB first なら上端が <code>bit0</code> です。次は LSB first の例です。
+            </p>
+            <pre><code>const uint8_t font_data[] = {
+  // char: "A" (8x8)
+  // ...#....
+  // ..#.#...
+  // ..#.#...
+  // ..#.#...
+  // ..###...
+  // ..#.#...
+  // ..#.#...
+  // ........
+  0b00000000, 0b00000000, 0b01111110, 0b00010001, 0b01111110, 0b00000000, 0b00000000, 0b00000000
+};</code></pre>
+            <p>
+              左端を 0 として列を数えると、列 2（「A」の左の縦線）は 1〜6 行目が点灯しているので、LSB first では <code>bit1</code>〜<code>bit6</code> が 1 の <code>0b01111110</code> になります。列 3（頂点と横棒がある列）は 0 行目と 4 行目が点灯していて、LSB first では <code>0b00010001</code>、MSB first にすると <code>0b10001000</code> です。
+            </p>
+            <pre><code>const uint8_t font_data[] = {
+  // char: "A" (8x8)
+  // ...#....
+  // ..#.#...
+  // ..#.#...
+  // ..#.#...
+  // ..###...
+  // ..#.#...
+  // ..#.#...
+  // ........
+  0b00000000, 0b00000000, 0b01111110, 0b10001000, 0b01111110, 0b00000000, 0b00000000, 0b00000000
+};</code></pre>
+            <h3>高さが 8 を超えるとき</h3>
+            <p>
+              1 列に「高さ ÷ 8 の切り上げ」バイトを使い、列ごとに「上の 8 ドット → 下の 8 ドット」の順で並びます。16×16 なら、0 列目の上・0 列目の下・1 列目の上… の順で 32 バイトです。
+            </p>
+            <pre><code>const uint8_t font_data[] = {
+  // char: "あ" (16x16)
+  // ......#.........
+  // ......#.........
+  // ..############..
+  // ..############..
+  // ......#.....#...
+  // ......#######...
+  // ....#########...
+  // ...####...####..
+  // ..##..#..##..##.
+  // .##...#..#....#.
+  // .#....####....#.
+  // .#....###.....#.
+  // .#...###.....##.
+  // .#######....##..
+  // ..###..#.####...
+  // .........###....
+  0x00, 0x00, 0x00, 0x3E, 0x0C, 0x63, 0x8C, 0x61, 0xCC, 0x60, 0xCC, 0x30, 0xFF, 0x3F, 0x6C, 0x7C,
+  0x6C, 0x0C, 0x6C, 0xC7, 0xEC, 0xC1, 0xEC, 0xC0, 0xFC, 0x60, 0x8C, 0x31, 0x00, 0x1F, 0x00, 0x00
+};</code></pre>
+            <p class="guide-note">1 文字のバイト数 = 幅 ×「高さ ÷ 8 の切り上げ」。</p>
+          </section>
+
+          <section>
+            <h2 id="ssd1306">SSD1306 の画面バッファとの関係</h2>
+            <p>
+              SSD1306 の表示メモリは、縦 8 ドットを 1 バイト（最下位ビットが上）にしたものが横に 128 バイト並んだ「ページ」を、128×64 なら 8 段重ねた形です。Adafruit_SSD1306 の画面バッファも同じ並びで、座標 (x, y) のドットは <code>buffer[x + (y / 8) * WIDTH]</code> の <code>bit (y &amp; 7)</code> に入ります（Adafruit_SSD1306.cpp の <code>drawPixel</code>）。
+            </p>
+            <p>
+              そのため、<strong>列方向・LSB first・高さ 8</strong> の出力は、1 ページぶんの並びとそのまま同じです。高さ 16 の出力は、上の 8 ドットと下の 8 ドットが列ごとに交互に並んでいるので、ページに書き込むときは次のように並べ替えます（Adafruit_SSD1306 の <code>getBuffer()</code> で画面バッファに直接書く例です）。
+            </p>
+            <pre><code>// 列方向・LSB の 16×16（1 列 2 バイト: 上の 8 ドット、下の 8 ドット）を、
+// 画面バッファ（縦 8 ドット × 横 128 列の「ページ」が 8 段）の page0 段目・x0 列目から書き込む
+void putGlyph16(uint8_t x0, uint8_t page0, const uint8_t *glyph) {
+  uint8_t *buf = display.getBuffer();
+  for (uint8_t page = 0; page &lt; 2; page++) {
+    for (uint8_t x = 0; x &lt; 16; x++) {
+      buf[(page0 + page) * 128 + x0 + x] = pgm_read_byte(glyph + x * 2 + page);
+    }
+  }
+}</code></pre>
+            <p>ふつうは行方向のデータを <code>drawBitmap</code> で描けば並びを気にせずに済みます（「<a href="/guide/arduino-oled-misaki/">Arduino と OLED で日本語を表示する</a>」）。画面バッファに直接書くのは、描く処理を軽くしたいときなどです。</p>
+          </section>
+
+          <section>
+            <h2 id="table">ライブラリごとの設定</h2>
+            <p>よく使う描画の関数・形式と、ツールで選ぶ設定の対応です。右の列は、各ライブラリのソースで読み方を確かめた箇所です。</p>
+            <table>
+              <thead>
+                <tr><th>描き方</th><th>構造</th><th>ビット順</th><th>ソースで確かめた箇所</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Adafruit_GFX の <code>drawBitmap</code></td><td>行方向</td><td>MSB first</td><td>Adafruit_GFX.cpp（<code>b &amp; 0x80</code>）</td></tr>
+                <tr><td>Adafruit_GFX の <code>drawXBitmap</code></td><td>行方向</td><td>LSB first</td><td>同（<code>b &amp; 0x01</code>）</td></tr>
+                <tr><td>U8g2 の <code>drawXBMP</code></td><td>行方向</td><td>LSB first</td><td>u8g2_bitmap.c（<code>mask = 1</code> から左へ）</td></tr>
+                <tr><td>U8g2 の <code>drawBitmap</code></td><td>行方向</td><td>MSB first</td><td>同（<code>mask = 128</code> から）。PROGMEM の配列は読めない</td></tr>
+                <tr><td>MicroPython framebuf の <code>MONO_HLSB</code></td><td>行方向</td><td>MSB first</td><td>modframebuf.c（<code>7 - (x &amp; 0x07)</code>）</td></tr>
+                <tr><td>MicroPython framebuf の <code>MONO_HMSB</code></td><td>行方向</td><td>LSB first</td><td>同（<code>x &amp; 0x07</code>）</td></tr>
+                <tr><td>MicroPython framebuf の <code>MONO_VLSB</code>（SSD1306 のドライバが画面に使う形式）</td><td>列方向・高さ 8</td><td>LSB first</td><td>同（<code>y &amp; 0x07</code>）</td></tr>
+                <tr><td>LedControl の <code>setRow</code></td><td>行方向・幅 8</td><td>MSB first</td><td>LedControl.cpp（<code>B10000000 &gt;&gt; column</code>）</td></tr>
+                <tr><td>LedControl の <code>setColumn</code></td><td>列方向・高さ 8</td><td>MSB first</td><td>同（<code>value &gt;&gt; (7-row)</code>）</td></tr>
+                <tr><td>SSD1306 の画面バッファに直接書く</td><td>列方向・高さ 8</td><td>LSB first</td><td>Adafruit_SSD1306.cpp（<code>1 &lt;&lt; (y &amp; 7)</code>）</td></tr>
+              </tbody>
+            </table>
+            <p>
+              この表のとおりに各ライブラリが配列を読んだとき、ツールのドット絵と同じ形に戻ることを、この記事の出力例で確かめています。なお、行方向の形式はどれも、幅が 8 の倍数でない行をバイトの区切りまで埋めて読むので、ツールの出力（余りを 0 で埋める）とそのまま合います。
+            </p>
+            <p>かんたんモードのプリセットは、それぞれ次の設定です。</p>
+            <ul>
+              <li><strong>Arduino / C言語</strong>・<strong>MicroPython / bytes</strong>: 行方向・MSB first・16 進</li>
+              <li><strong>C言語（見やすい2D）</strong>・<strong>Python リスト</strong>・<strong>JSON</strong>: 0 と 1 の 3 次元配列</li>
+              <li><strong>記号アート（# と .）</strong>: 数値ではなく、確かめる用のドット絵</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 id="micropython">MicroPython で使う例</h2>
+            <p>「MicroPython / bytes」を選ぶと、1 文字ぶんを 1 つのリストにした形で出力します。</p>
+            <pre><code>font_data = [
+    # char: "A" (8x8)
+    [
+        0x10, 0x28, 0x28, 0x28, 0x38, 0x28, 0x28, 0x00
+    ]
+]</code></pre>
+            <p>行方向・MSB first なので、1 文字ぶんを <code>bytearray</code> にして <code>MONO_HLSB</code> の <code>FrameBuffer</code> を作れば、SSD1306 のドライバ（micropython-lib の ssd1306）の <code>blit</code> で描けます。</p>
+            <pre><code>from machine import Pin, I2C
+import framebuf
+import ssd1306
+
+# ESP32 の例。SCL・SDA のピンはボードに合わせて変える
+i2c = I2C(0, scl=Pin(22), sda=Pin(21))
+oled = ssd1306.SSD1306_I2C(128, 64, i2c)
+
+# ここにツールの出力（font_data = [...]）を貼る
+
+glyph = framebuf.FrameBuffer(bytearray(font_data[0]), 8, 8, framebuf.MONO_HLSB)
+oled.blit(glyph, 0, 0)
+oled.show()</code></pre>
+          </section>
+
+          <section>
+            <h2 id="other">そのほかの設定</h2>
+            <ul>
+              <li><strong>0/1 反転</strong>: 点灯と消灯を入れ替えます。白地に黒い文字で描きたいときや、0 のビットで点灯する表示器に使います。</li>
+              <li><strong>表記</strong>（10 進数・16 進数・2 進数）: 値は同じで、書き方だけが変わります。2 進の <code>0b…</code> は C++14 からの書き方で、Arduino（GCC）ではそのまま使えます。C では C23 から標準になり、それより前は GCC などの拡張です。</li>
+              <li><strong>文字コメントを挿入</strong>・<strong>ASCIIアートも含める</strong>: 各文字の前に <code>// char: "A" (8x8)</code> とドット絵のコメントを入れます。配列のどこが何の文字かを確かめるのに便利です。</li>
+              <li><strong>2次元配列 (行×列)</strong>: 1 文字目だけを <code>[行][列]</code> の配列で出します。1 文字だけのアイコンなどに使います。</li>
+            </ul>
+          </section>
+        </article>
+
+        <!-- 右の列（幅 300px）。将来の広告枠はこの列か、本文の section の間に高さを決めて置く -->
+        <aside class="guide-aside">
+          <div class="guide-aside-sticky space-y-5">
+            <nav aria-labelledby="toc-title" class="rounded-lg border bg-card p-4">
+              <h2 id="toc-title" class="mb-2 font-bold">この記事の内容</h2>
+              <ol class="list-decimal space-y-1 pl-5"><li><a href="#matrix">0 と 1 の表（3 次元配列）</a></li><li><a href="#row">行方向のビットパック</a></li><li><a href="#col">列方向のビットパック</a></li><li><a href="#ssd1306">SSD1306 の画面バッファとの関係</a></li><li><a href="#table">ライブラリごとの設定</a></li><li><a href="#micropython">MicroPython で使う例</a></li><li><a href="#other">そのほかの設定</a></li></ol>
+            </nav>
+            <div class="rounded-lg border bg-card p-4">
+              <h2 class="mb-2 font-bold">ほかのガイド</h2>
+              <ul class="list-disc space-y-1 pl-5"><li><a href="/guide/arduino-oled-misaki/">Arduino と OLED で日本語を表示する</a></li><li><a href="/guide/led-matrix-max7219/">8×8 LED マトリクスに文字を出す</a></li></ul>
+            </div>
+            <div class="rounded-lg border bg-card p-4">
+              <p class="mb-3">文字を入力するだけで、C / Arduino / Python などの配列を作れます。インストールは要りません。</p>
+              <a href="/" class="inline-block rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground no-underline hover:opacity-90">Font to Binary Converter を開く</a>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="mt-10 border-t">
+      <div class="container mx-auto px-4 py-4 text-center text-xs text-muted-foreground">
+        Fonts: DotGothic16, Misaki Gothic 2nd ·
+        <a class="underline hover:text-foreground" href="https://github.com/takushio2525/font-to-bin">GitHub</a>
+        ·
+        <a class="underline hover:text-foreground" href="https://takushio2525.com/">作者: takushio2525</a>
+        ·
+        <a class="underline hover:text-foreground" href="https://takushio2525.com/privacy/">プライバシーポリシー</a>
+        ·
+        <a class="underline hover:text-foreground" href="https://takushio2525.com/privacy/#cookie" data-tk-consent-open="">Cookie 設定</a>
+      </div>
+    </footer>
+  </body>
+</html>
