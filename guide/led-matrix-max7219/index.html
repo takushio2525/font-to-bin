@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Content-Security-Policy の meta はビルド時に csp.ts が <meta charset> の直後へ差し込む -->
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <script src="/theme-init.js"></script>
+
+    <!-- Cookie 同意と GA4 はツール本体（/index.html）と同じ順番で読む -->
+    <script src="https://takushio2525.com/consent/consent.js"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-30GVXMB0GH"></script>
+    <script src="/ga-init.js"></script>
+    <meta name="google-adsense-account" content="ca-pub-3136871606832456" />
+
+    <title>8×8 LED マトリクス（MAX7219）に文字を表示する：ドットフォントを 1 文字 8 バイトの配列にする | Font to Binary Converter</title>
+    <meta name="description" content="8×8 の LED マトリクス（MAX7219）に日本語や英字を出す方法。1 文字 8 バイトの配列を LedControl の setRow で 1 行ずつ送る方法と、列方向の配列で文字を流す方法を、ツールの実際の出力とスケッチで説明します。" />
+    <link rel="canonical" href="https://font-to-bin.takushio2525.com/guide/led-matrix-max7219/" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Font to Binary Converter" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:title" content="8×8 LED マトリクス（MAX7219）に文字を表示する：ドットフォントを 1 文字 8 バイトの配列にする" />
+    <meta property="og:description" content="8×8 の LED マトリクス（MAX7219）に日本語や英字を出す方法。1 文字 8 バイトの配列を LedControl の setRow で 1 行ずつ送る方法と、列方向の配列で文字を流す方法を、ツールの実際の出力とスケッチで説明します。" />
+    <meta property="og:url" content="https://font-to-bin.takushio2525.com/guide/led-matrix-max7219/" />
+    <meta property="og:image" content="https://font-to-bin.takushio2525.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Font to Binary Converter の操作画面" />
+    <meta property="article:published_time" content="2026-09-29" />
+    <meta property="article:modified_time" content="2026-09-29" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="8×8 LED マトリクス（MAX7219）に文字を表示する：ドットフォントを 1 文字 8 バイトの配列にする" />
+    <meta name="twitter:description" content="8×8 の LED マトリクス（MAX7219）に日本語や英字を出す方法。1 文字 8 バイトの配列を LedControl の setRow で 1 行ずつ送る方法と、列方向の配列で文字を流す方法を、ツールの実際の出力とスケッチで説明します。" />
+    <meta name="twitter:image" content="https://font-to-bin.takushio2525.com/og-image.png" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#1B3A5C" />
+    <link rel="stylesheet" href="/src/guide.css" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "TechArticle",
+            "@id": "https://font-to-bin.takushio2525.com/guide/led-matrix-max7219/#article",
+            "headline": "8×8 LED マトリクス（MAX7219）に文字を表示する：ドットフォントを 1 文字 8 バイトの配列にする",
+            "description": "8×8 の LED マトリクス（MAX7219）に日本語や英字を出す方法。1 文字 8 バイトの配列を LedControl の setRow で 1 行ずつ送る方法と、列方向の配列で文字を流す方法を、ツールの実際の出力とスケッチで説明します。",
+            "datePublished": "2026-09-29",
+            "dateModified": "2026-09-29",
+            "inLanguage": "ja",
+            "author": {
+              "@id": "https://takushio2525.com/#person"
+            },
+            "publisher": {
+              "@id": "https://takushio2525.com/#person"
+            },
+            "image": "https://font-to-bin.takushio2525.com/og-image.png",
+            "mainEntityOfPage": "https://font-to-bin.takushio2525.com/guide/led-matrix-max7219/",
+            "isPartOf": {
+              "@id": "https://font-to-bin.takushio2525.com/#website"
+            },
+            "about": [
+              {
+                "@type": "Thing",
+                "name": "LED マトリクス"
+              },
+              {
+                "@type": "Thing",
+                "name": "MAX7219"
+              },
+              {
+                "@type": "Thing",
+                "name": "Arduino"
+              },
+              {
+                "@type": "Thing",
+                "name": "ビットマップフォント"
+              }
+            ]
+          },
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Font to Binary Converter",
+                "item": {
+                  "@type": "WebPage",
+                  "@id": "https://font-to-bin.takushio2525.com/",
+                  "name": "Font to Binary Converter"
+                }
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "8×8 LED マトリクスに文字を出す",
+                "item": {
+                  "@type": "WebPage",
+                  "@id": "https://font-to-bin.takushio2525.com/guide/led-matrix-max7219/",
+                  "name": "8×8 LED マトリクスに文字を出す"
+                }
+              }
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://font-to-bin.takushio2525.com/#website",
+            "name": "Font to Binary Converter",
+            "url": "https://font-to-bin.takushio2525.com/"
+          },
+          {
+            "@type": "Person",
+            "@id": "https://takushio2525.com/#person",
+            "name": "takushio2525",
+            "url": "https://takushio2525.com/profile/",
+            "sameAs": [
+              "https://github.com/takushio2525"
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <header class="border-b bg-card/50">
+      <div class="container mx-auto flex h-14 items-center justify-between gap-3 px-4">
+        <a href="/" class="flex min-w-0 items-center gap-2 font-bold">
+          <img src="/favicon.svg" width="28" height="28" alt="" />
+          <span class="truncate">Font to Binary Converter</span>
+        </a>
+        <a href="/" class="shrink-0 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90">ツールを開く</a>
+      </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6">
+      <nav aria-label="パンくずリスト" class="mb-5 text-xs text-muted-foreground">
+        <ol class="flex flex-wrap items-center gap-1">
+          <li><a class="underline hover:text-foreground" href="/">Font to Binary Converter</a></li>
+          <li aria-hidden="true">›</li>
+          <li aria-current="page">8×8 LED マトリクスに文字を出す</li>
+        </ol>
+      </nav>
+
+      <div class="guide-layout">
+        <article class="guide-article">
+          <h1>8×8 LED マトリクス（MAX7219）に文字を表示する：ドットフォントを 1 文字 8 バイトの配列にする</h1>
+          <p class="guide-meta">
+            公開: <time datetime="2026-09-29">2026/09/29</time>
+            
+            · 作者: <a href="https://takushio2525.com/">takushio2525</a>
+          </p>
+          <p class="guide-lead">
+            8×8 の LED マトリクスに文字を出すときは、1 文字を「8 行 × 8 ドット」の点灯パターンとして持ちます。横 1 行の 8 個の LED を 1 バイトの 8 ビットに対応させれば、1 文字はちょうど 8 バイトです。この記事では、Font to Binary Converter で美咲フォント 8×8 の配列を作り、MAX7219 を載せた LED マトリクスのモジュールに表示するまでを説明します。
+          </p>
+
+          <div class="glyph-figs"><span class="glyph-fig"><svg viewBox="0 0 8 8" width="96" height="96" role="img" aria-label="「ハ」の 8×8 ドット" shape-rendering="crispEdges"><rect width="8" height="8" fill="#0b1221"/><g fill="#ffdd55"><rect x="2" y="0" width="1" height="1"/><rect x="4" y="0" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="5" y="1" width="1" height="1"/><rect x="2" y="2" width="1" height="1"/><rect x="5" y="2" width="1" height="1"/><rect x="1" y="3" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="1" y="4" width="1" height="1"/><rect x="6" y="4" width="1" height="1"/><rect x="1" y="5" width="1" height="1"/><rect x="6" y="5" width="1" height="1"/><rect x="0" y="6" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/></g><path d="M1 0V8M2 0V8M3 0V8M4 0V8M5 0V8M6 0V8M7 0V8M0 1H8M0 2H8M0 3H8M0 4H8M0 5H8M0 6H8M0 7H8" stroke="#ffffff" stroke-opacity="0.12" stroke-width="0.06" fill="none"/></svg><span>ハ</span></span><span class="glyph-fig"><svg viewBox="0 0 8 8" width="96" height="96" role="img" aria-label="「ロ」の 8×8 ドット" shape-rendering="crispEdges"><rect width="8" height="8" fill="#0b1221"/><g fill="#ffdd55"><rect x="0" y="1" width="1" height="1"/><rect x="1" y="1" width="1" height="1"/><rect x="2" y="1" width="1" height="1"/><rect x="3" y="1" width="1" height="1"/><rect x="4" y="1" width="1" height="1"/><rect x="5" y="1" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="6" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="6" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="6" y="4" width="1" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="6" y="5" width="1" height="1"/><rect x="0" y="6" width="1" height="1"/><rect x="1" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="3" y="6" width="1" height="1"/><rect x="4" y="6" width="1" height="1"/><rect x="5" y="6" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/></g><path d="M1 0V8M2 0V8M3 0V8M4 0V8M5 0V8M6 0V8M7 0V8M0 1H8M0 2H8M0 3H8M0 4H8M0 5H8M0 6H8M0 7H8" stroke="#ffffff" stroke-opacity="0.12" stroke-width="0.06" fill="none"/></svg><span>ロ</span></span><span class="glyph-fig"><svg viewBox="0 0 8 8" width="96" height="96" role="img" aria-label="「ー」の 8×8 ドット" shape-rendering="crispEdges"><rect width="8" height="8" fill="#0b1221"/><g fill="#ffdd55"><rect x="0" y="2" width="1" height="1"/><rect x="1" y="3" width="1" height="1"/><rect x="2" y="3" width="1" height="1"/><rect x="3" y="3" width="1" height="1"/><rect x="4" y="3" width="1" height="1"/><rect x="5" y="3" width="1" height="1"/><rect x="6" y="3" width="1" height="1"/></g><path d="M1 0V8M2 0V8M3 0V8M4 0V8M5 0V8M6 0V8M7 0V8M0 1H8M0 2H8M0 3H8M0 4H8M0 5H8M0 6H8M0 7H8" stroke="#ffffff" stroke-opacity="0.12" stroke-width="0.06" fill="none"/></svg><span>ー</span></span></div>
+
+          <section>
+            <h2 id="idea">1 文字 = 8 バイトの考え方</h2>
+            <p>「ロ」を例にすると、上の行から順に、点灯する LED を 1、消える LED を 0 にして 8 ビットの数にしたものが 1 行ぶんのデータです。左端の LED を最上位ビット（<code>bit7</code>）に置いています。</p>
+            <table><thead><tr><th>行</th><th>ドット（# が点灯）</th><th>2 進</th><th>16 進</th></tr></thead><tbody><tr><td>0</td><td><code>........</code></td><td><code>0b00000000</code></td><td><code>0x00</code></td></tr><tr><td>1</td><td><code>#######.</code></td><td><code>0b11111110</code></td><td><code>0xFE</code></td></tr><tr><td>2</td><td><code>#.....#.</code></td><td><code>0b10000010</code></td><td><code>0x82</code></td></tr><tr><td>3</td><td><code>#.....#.</code></td><td><code>0b10000010</code></td><td><code>0x82</code></td></tr><tr><td>4</td><td><code>#.....#.</code></td><td><code>0b10000010</code></td><td><code>0x82</code></td></tr><tr><td>5</td><td><code>#.....#.</code></td><td><code>0b10000010</code></td><td><code>0x82</code></td></tr><tr><td>6</td><td><code>#######.</code></td><td><code>0b11111110</code></td><td><code>0xFE</code></td></tr><tr><td>7</td><td><code>........</code></td><td><code>0b00000000</code></td><td><code>0x00</code></td></tr></tbody></table>
+            <p>この 8 個の数を上の行から順に並べたものが、「ロ」1 文字のデータです。</p>
+          </section>
+
+          <section>
+            <h2 id="parts">用意するもの</h2>
+            <ul>
+              <li>Arduino Uno など。この記事のスケッチは、Arduino IDE 同梱の arduino-cli で Uno 向けにコンパイルできることを確かめています</li>
+              <li>MAX7219 を載せた 8×8 LED マトリクスのモジュール（VCC・GND のほか、DIN・CS・CLK の 3 本で制御します）</li>
+              <li>Arduino IDE のライブラリマネージャで入れる「LedControl」</li>
+            </ul>
+            <p>配線はスケッチの <code>LedControl lc(12, 11, 10, 1)</code> に合わせて、DIN を 12 番、CLK を 11 番、CS を 10 番ピンにつなぎます。ほかのピンにつなぐときは、この数字を変えます。</p>
+          </section>
+
+          <section>
+            <h2 id="make">配列を作る</h2>
+            <ol>
+              <li><a href="/">Font to Binary Converter</a> を開き、「かんたん」モードのまま「1 変換したい文字」に <code>ハロー</code> と入力します</li>
+              <li>「2 見た目」のフォントで「Misaki Gothic (8x8)」を選びます（ドットサイズも 8 になります）</li>
+              <li>「3 出力フォーマット」で「Arduino / C言語」を選び、出力をコピーします</li>
+            </ol>
+            <pre><code>const uint8_t font_data[] PROGMEM = {
+  // char: "ハ" (8x8)
+  // ..#.#...
+  // ..#..#..
+  // ..#..#..
+  // .#...#..
+  // .#....#.
+  // .#....#.
+  // #.....#.
+  // ........
+  0x28, 0x24, 0x24, 0x44, 0x42, 0x42, 0x82, 0x00,
+  // char: "ロ" (8x8)
+  // ........
+  // #######.
+  // #.....#.
+  // #.....#.
+  // #.....#.
+  // #.....#.
+  // #######.
+  // ........
+  0x00, 0xFE, 0x82, 0x82, 0x82, 0x82, 0xFE, 0x00,
+  // char: "ー" (8x8)
+  // ........
+  // ........
+  // #.......
+  // .######.
+  // ........
+  // ........
+  // ........
+  // ........
+  0x00, 0x00, 0x80, 0x7E, 0x00, 0x00, 0x00, 0x00
+};</code></pre>
+          </section>
+
+          <section>
+            <h2 id="show">1 文字ずつ表示する（setRow）</h2>
+            <p>LedControl の <code>setRow</code> で、1 行ずつ 8 回送ると 1 文字になります。次のスケッチは「ハ」「ロ」「ー」を 0.8 秒ずつ順に表示します。</p>
+            <pre><code>#include &lt;LedControl.h&gt;
+
+// LedControl(DIN のピン, CLK のピン, CS のピン, つないだ MAX7219 の数)
+LedControl lc(12, 11, 10, 1);
+
+// ↓ Font to Binary Converter の出力をそのまま貼る
+const uint8_t font_data[] PROGMEM = {
+  // char: "ハ" (8x8)
+  // ..#.#...
+  // ..#..#..
+  // ..#..#..
+  // .#...#..
+  // .#....#.
+  // .#....#.
+  // #.....#.
+  // ........
+  0x28, 0x24, 0x24, 0x44, 0x42, 0x42, 0x82, 0x00,
+  // char: "ロ" (8x8)
+  // ........
+  // #######.
+  // #.....#.
+  // #.....#.
+  // #.....#.
+  // #.....#.
+  // #######.
+  // ........
+  0x00, 0xFE, 0x82, 0x82, 0x82, 0x82, 0xFE, 0x00,
+  // char: "ー" (8x8)
+  // ........
+  // ........
+  // #.......
+  // .######.
+  // ........
+  // ........
+  // ........
+  // ........
+  0x00, 0x00, 0x80, 0x7E, 0x00, 0x00, 0x00, 0x00
+};
+
+const uint8_t CHAR_COUNT = sizeof(font_data) / 8;  // 8×8 は 1 文字 8 バイト
+
+void setup() {
+  lc.shutdown(0, false);  // 省電力モードを解除する
+  lc.setIntensity(0, 4);  // 明るさ（0〜15）
+  lc.clearDisplay(0);
+}
+
+void loop() {
+  for (uint8_t c = 0; c &lt; CHAR_COUNT; c++) {
+    for (uint8_t row = 0; row &lt; 8; row++) {
+      // 1 バイト = 1 行ぶん。bit7 が 0 列目の LED
+      lc.setRow(0, row, pgm_read_byte(&amp;font_data[c * 8 + row]));
+    }
+    delay(800);
+  }
+}</code></pre>
+            <ul>
+              <li><code>setRow(0, row, value)</code> は、<code>value</code> の <code>bit7</code> を 0 列目、<code>bit0</code> を 7 列目の LED に対応させます（LedControl.cpp の <code>setLed</code> が <code>B10000000 &gt;&gt; column</code> でビットを選んでいます）。「Arduino / C言語」の出力は左端のドットが <code>bit7</code> なので、そのまま渡せます。</li>
+              <li>配列は PROGMEM（フラッシュ）にあるので、<code>pgm_read_byte</code> で 1 バイトずつ読み出してから渡しています。</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 id="orientation">向きが合わないとき</h2>
+            <p>モジュールによって、LED の並びと MAX7219 の配線の向きが違います。表示してみて文字の向きがおかしければ、次のように直します。</p>
+            <table>
+              <thead>
+                <tr><th>見え方</th><th>直し方</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>左右が逆</td><td>ツールを「詳細」モードにして、「ビット順」を「LSB first」にして出力し直す</td></tr>
+                <tr><td>上下が逆</td><td>スケッチの <code>setRow(0, row, …)</code> を <code>setRow(0, 7 - row, …)</code> にする</td></tr>
+                <tr><td>90 度回っている</td><td>「構造」を「ビットパック（列方向）」にして出力し、そのまま <code>setRow</code> に渡す（行と列が入れ替わる）。それでも左右か上下が逆なら、上の 2 つを組み合わせる</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section>
+            <h2 id="scroll">文字を流す（スクロール）</h2>
+            <p>
+              8×8 では一度に 1 文字しか出せないので、長い言葉は横に流すと読みやすくなります。流すときは、<strong>1 バイトが縦 1 列</strong>になる列方向のデータが扱いやすくなります。列を 1 つずつずらして表示するだけで済むからです。
+            </p>
+            <ol>
+              <li>かんたんモードで「Arduino / C言語」を選んだあと、画面の右上で「詳細」に切り替えます</li>
+              <li>「構造」を「ビットパック（列方向）」にします（「ビット順」は MSB first のまま）</li>
+            </ol>
+            <pre><code>const uint8_t font_data[] PROGMEM = {
+  // char: "ハ" (8x8)
+  // ..#.#...
+  // ..#..#..
+  // ..#..#..
+  // .#...#..
+  // .#....#.
+  // .#....#.
+  // #.....#.
+  // ........
+  0x02, 0x1C, 0xE0, 0x00, 0x80, 0x70, 0x0E, 0x00,
+  // char: "ロ" (8x8)
+  // ........
+  // #######.
+  // #.....#.
+  // #.....#.
+  // #.....#.
+  // #.....#.
+  // #######.
+  // ........
+  0x7E, 0x42, 0x42, 0x42, 0x42, 0x42, 0x7E, 0x00,
+  // char: "ー" (8x8)
+  // ........
+  // ........
+  // #.......
+  // .######.
+  // ........
+  // ........
+  // ........
+  // ........
+  0x20, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x00
+};</code></pre>
+            <p>1 文字ぶんの 8 バイトは、左の列から順に並んでいます。各バイトの <code>bit7</code> が一番上の LED です。このデータを 1 列ずつずらしながら表示するスケッチです。</p>
+            <pre><code>#include &lt;LedControl.h&gt;
+
+LedControl lc(12, 11, 10, 1);
+
+// ↓ 構造を「ビットパック（列方向）」、ビット順を MSB first にして出力したもの
+const uint8_t font_data[] PROGMEM = {
+  // char: "ハ" (8x8)
+  // ..#.#...
+  // ..#..#..
+  // ..#..#..
+  // .#...#..
+  // .#....#.
+  // .#....#.
+  // #.....#.
+  // ........
+  0x02, 0x1C, 0xE0, 0x00, 0x80, 0x70, 0x0E, 0x00,
+  // char: "ロ" (8x8)
+  // ........
+  // #######.
+  // #.....#.
+  // #.....#.
+  // #.....#.
+  // #.....#.
+  // #######.
+  // ........
+  0x7E, 0x42, 0x42, 0x42, 0x42, 0x42, 0x7E, 0x00,
+  // char: "ー" (8x8)
+  // ........
+  // ........
+  // #.......
+  // .######.
+  // ........
+  // ........
+  // ........
+  // ........
+  0x20, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x00
+};
+
+const int16_t COLS = sizeof(font_data);  // 1 バイト = 1 列（bit7 が上端）
+
+void setup() {
+  lc.shutdown(0, false);
+  lc.setIntensity(0, 4);
+  lc.clearDisplay(0);
+}
+
+void loop() {
+  // offset 列目からの 8 列を表示し、1 列ずつずらす（右から入って左へ流れる）
+  for (int16_t offset = -8; offset &lt; COLS; offset++) {
+    for (uint8_t col = 0; col &lt; 8; col++) {
+      int16_t i = offset + col;
+      uint8_t bits = (i &gt;= 0 &amp;&amp; i &lt; COLS) ? pgm_read_byte(&amp;font_data[i]) : 0;
+      lc.setColumn(0, col, bits);
+    }
+    delay(80);
+  }
+}</code></pre>
+            <ul>
+              <li><code>setColumn(0, col, value)</code> は、<code>value</code> の <code>bit7</code> を 0 行目（一番上）に対応させます（LedControl.cpp の <code>setColumn</code> が <code>value &gt;&gt; (7 - row)</code> で 1 行ずつ取り出しています）。列方向・MSB first の出力は上端が <code>bit7</code> なので、1 バイトをそのまま 1 列として送れます。</li>
+              <li>美咲フォントは右端の 1 列が空いているので、文字を詰めて並べて流しても、文字と文字の間が空きます。</li>
+              <li><code>offset</code> を -8 から始めているのは、何も表示していない状態から、文字が右端から入ってくるようにするためです。</li>
+              <li><code>setColumn</code> は内部で LED を 1 個ずつ設定するので、<code>setRow</code> より MAX7219 へ送る回数が多くなります（1 列で 8 回）。流す速さは <code>delay</code> で調整します。</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 id="chain">モジュールを複数つなぐとき</h2>
+            <p>
+              MAX7219 のモジュールは数珠つなぎにできます。<code>LedControl lc(12, 11, 10, 4)</code> のように最後の引数で台数（LedControl では最大 8 台）を指定し、<code>setRow</code> や <code>setColumn</code> の最初の引数で何台目か（0 から数える）を選びます。流す場合は、4 台なら 32 列ぶんを並べて、同じ考え方で 1 列ずつずらします。
+            </p>
+            <p>配列の並び方の詳しい説明は「<a href="/guide/output-format/">出力の読み方</a>」に、OLED に出す方法は「<a href="/guide/arduino-oled-misaki/">Arduino と OLED で日本語を表示する</a>」にまとめています。</p>
+          </section>
+        </article>
+
+        <!-- 右の列（幅 300px）。将来の広告枠はこの列か、本文の section の間に高さを決めて置く -->
+        <aside class="guide-aside">
+          <div class="guide-aside-sticky space-y-5">
+            <nav aria-labelledby="toc-title" class="rounded-lg border bg-card p-4">
+              <h2 id="toc-title" class="mb-2 font-bold">この記事の内容</h2>
+              <ol class="list-decimal space-y-1 pl-5"><li><a href="#idea">1 文字 = 8 バイトの考え方</a></li><li><a href="#parts">用意するもの</a></li><li><a href="#make">配列を作る</a></li><li><a href="#show">1 文字ずつ表示する（setRow）</a></li><li><a href="#orientation">向きが合わないとき</a></li><li><a href="#scroll">文字を流す（スクロール）</a></li><li><a href="#chain">モジュールを複数つなぐとき</a></li></ol>
+            </nav>
+            <div class="rounded-lg border bg-card p-4">
+              <h2 class="mb-2 font-bold">ほかのガイド</h2>
+              <ul class="list-disc space-y-1 pl-5"><li><a href="/guide/arduino-oled-misaki/">Arduino と OLED で日本語を表示する</a></li><li><a href="/guide/output-format/">出力の読み方</a></li></ul>
+            </div>
+            <div class="rounded-lg border bg-card p-4">
+              <p class="mb-3">文字を入力するだけで、C / Arduino / Python などの配列を作れます。インストールは要りません。</p>
+              <a href="/" class="inline-block rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground no-underline hover:opacity-90">Font to Binary Converter を開く</a>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="mt-10 border-t">
+      <div class="container mx-auto px-4 py-4 text-center text-xs text-muted-foreground">
+        Fonts: DotGothic16, Misaki Gothic 2nd ·
+        <a class="underline hover:text-foreground" href="https://github.com/takushio2525/font-to-bin">GitHub</a>
+        ·
+        <a class="underline hover:text-foreground" href="https://takushio2525.com/">作者: takushio2525</a>
+        ·
+        <a class="underline hover:text-foreground" href="https://takushio2525.com/privacy/">プライバシーポリシー</a>
+        ·
+        <a class="underline hover:text-foreground" href="https://takushio2525.com/privacy/#cookie" data-tk-consent-open="">Cookie 設定</a>
+      </div>
+    </footer>
+  </body>
+</html>

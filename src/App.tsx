@@ -23,7 +23,7 @@ export default function App() {
   );
   usePersist(state);
   const [fonts, setFonts] = useState<FontDef[]>(BUILTIN_FONTS);
-  const { glyphs } = useGlyphs(state, fonts);
+  const { glyphs, fontReady } = useGlyphs(state, fonts);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const { theme, toggle } = useTheme();
   const { mode, setMode } = useMode();
@@ -93,6 +93,10 @@ export default function App() {
           ) : (
             <PreviewPanel
               glyphs={glyphs}
+              loading={!fontReady && state.text.length > 0}
+              pendingCount={Array.from(state.text).length}
+              cellWidth={state.width}
+              cellHeight={state.height}
               overriddenIndices={overriddenIndices}
               onOpenEditor={setEditingIndex}
               onClearAllOverrides={() =>
@@ -138,33 +142,6 @@ export default function App() {
           </div>
         </section>
 
-        <footer className="mt-8 py-4 border-t text-center text-xs text-muted-foreground">
-          Built with React + Vite · Fonts: DotGothic16, Misaki Gothic 2nd ·
-          <a
-            className="ml-1 underline hover:text-foreground"
-            href="https://github.com/takushio2525/font-to-bin"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            GitHub
-          </a>
-          {" · "}
-          <a
-            className="underline hover:text-foreground"
-            href="https://takushio2525.com/privacy/"
-          >
-            プライバシーポリシー
-          </a>
-          {" · "}
-          {/* 押すと consent.js が同意バナーをその場で開き直す。React の onClick を付けず素の <a> のままにする */}
-          <a
-            className="underline hover:text-foreground"
-            href="https://takushio2525.com/privacy/#cookie"
-            data-tk-consent-open=""
-          >
-            Cookie 設定
-          </a>
-        </footer>
       </main>
 
       {editingIndex !== null && glyphs[editingIndex] && (

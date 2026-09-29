@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- Content-Security-Policy の meta はビルド時に csp.ts が <meta charset> の直後へ差し込む -->
     <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <!-- 保存したテーマ（ダーク / ライト）を描画前に当てる -->
+    <script src="/theme-init.js"></script>
 
     <!-- Cookie 同意（Consent Mode v2）。ハブ takushio2525.com の共用スクリプト。必ず Google タグより前に、同期で読む -->
     <script src="https://takushio2525.com/consent/consent.js"></script>
@@ -17,21 +19,18 @@
     <!-- AdSense のサイト所有権確認（メタタグ方式。広告ユニットは未配置） -->
     <meta name="google-adsense-account" content="ca-pub-3136871606832456" />
 
-    <title>Font to Binary Converter</title>
-    <meta
-      name="description"
-      content="ドットフォントを C / Arduino / Python など任意のバイナリ配列に変換する Web ツール。TTF/OTF のアップロード、ピクセル単位の編集、ビットパック出力に対応。インストール不要でブラウザだけで動作します。"
-    />
+    <title>ドットフォントを C / Arduino / Python の配列に変換 | Font to Binary Converter</title>
+    <meta name="description" content="文字を入力するだけで、美咲フォント（8×8）や DotGothic16（16×16）、手持ちの TTF / OTF を C / Arduino（PROGMEM）/ Python などの配列に変換。ビットパックや MSB / LSB も選べ、OLED や LED マトリクス向けのフォントデータをブラウザだけで作れます。" />
     <link rel="canonical" href="https://font-to-bin.takushio2525.com/" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Font to Binary Converter" />
     <meta property="og:locale" content="ja_JP" />
-    <meta property="og:title" content="Font to Binary Converter" />
+    <meta property="og:title" content="ドットフォントを C / Arduino / Python の配列に変換 | Font to Binary Converter" />
     <meta
       property="og:description"
-      content="ドットフォントを C / Arduino / Python など任意のバイナリ配列に変換する Web ツール。TTF/OTF のアップロード、ピクセル単位の編集、ビットパック出力に対応。インストール不要でブラウザだけで動作します。"
+      content="文字を入力するだけで、美咲フォント（8×8）や DotGothic16（16×16）、手持ちの TTF / OTF を C / Arduino / Python などの配列に変換。ビットパックや MSB / LSB も選べます。ブラウザだけで動きます。"
     />
     <meta property="og:url" content="https://font-to-bin.takushio2525.com/" />
     <meta property="og:image" content="https://font-to-bin.takushio2525.com/og-image.png" />
@@ -41,19 +40,223 @@
 
     <!-- X (Twitter) カード -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Font to Binary Converter" />
+    <meta name="twitter:title" content="ドットフォントを C / Arduino / Python の配列に変換 | Font to Binary Converter" />
     <meta
       name="twitter:description"
-      content="ドットフォントを C / Arduino / Python など任意のバイナリ配列に変換する Web ツール。TTF/OTF のアップロード、ピクセル単位の編集、ビットパック出力に対応。"
+      content="文字を入力するだけで、美咲フォント（8×8）や DotGothic16（16×16）、手持ちの TTF / OTF を C / Arduino / Python などの配列に変換。ブラウザだけで動きます。"
     />
     <meta name="twitter:image" content="https://font-to-bin.takushio2525.com/og-image.png" />
 
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#1B3A5C" />
+
+    <!-- 構造化データ。中身は下の「できること」「よくある質問」に表示している内容と揃える -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://font-to-bin.takushio2525.com/#website",
+            "name": "Font to Binary Converter",
+            "url": "https://font-to-bin.takushio2525.com/",
+            "inLanguage": "ja",
+            "publisher": { "@id": "https://takushio2525.com/#person" }
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://font-to-bin.takushio2525.com/#app",
+            "name": "Font to Binary Converter",
+            "url": "https://font-to-bin.takushio2525.com/",
+            "description": "入力した文字を、選んだフォントで 1 文字ずつドット（0 と 1）の表に変換し、C / C++ / Arduino（PROGMEM）/ Python / JavaScript / TypeScript / Rust / Go / JSON などのソースコードとして書き出すブラウザのツール。",
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": "Web ブラウザ",
+            "browserRequirements": "JavaScript を有効にしたブラウザ",
+            "inLanguage": "ja",
+            "isAccessibleForFree": true,
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
+            "featureList": [
+              "美咲フォント（8×8）と DotGothic16（16×16）を同梱",
+              "TTF / OTF / WOFF / WOFF2 のフォントの読み込み",
+              "C / C++ / Arduino（PROGMEM）/ Python / JavaScript / TypeScript / Rust / Go / JSON / Markdown での出力",
+              "行方向・列方向のビットパック、MSB / LSB、10 進・16 進・2 進の切り替え",
+              "1 ドットずつ手直しできるエディタ"
+            ],
+            "screenshot": "https://font-to-bin.takushio2525.com/og-image.png",
+            "author": { "@id": "https://takushio2525.com/#person" },
+            "isPartOf": { "@id": "https://font-to-bin.takushio2525.com/#website" }
+          },
+          {
+            "@type": "Person",
+            "@id": "https://takushio2525.com/#person",
+            "name": "takushio2525",
+            "url": "https://takushio2525.com/profile/",
+            "sameAs": ["https://github.com/takushio2525"]
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://font-to-bin.takushio2525.com/#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "読み込んだフォントや入力した文字は、どこかへ送信されますか？",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "送信しません。変換はすべてブラウザの中で行い、読み込んだフォントファイルや入力した文字をサーバーへ送ることはありません。設定はこのブラウザの LocalStorage に保存されます。ページの閲覧は Google アナリティクスで計測していますが、共有 URL に入る設定（?s=）は計測に送らないようにしています。"
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "どのフォントが使えますか？",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "美咲フォント（8×8 ドットの日本語フォント）と DotGothic16（16×16）を同梱しています。ほかに、システムの等幅フォントと、手持ちの TTF / OTF / WOFF / WOFF2 のファイルを読み込んで使えます。"
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Arduino で使うにはどうすればよいですか？",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "かんたんモードの出力フォーマットで「Arduino / C言語」を選ぶと、PROGMEM（フラッシュメモリ）に置く uint8_t の配列として出力します。行方向に 8 ドットを 1 バイトへ詰めた形で、Adafruit_GFX の drawBitmap にそのまま渡せます。手順は使い方ガイドで説明しています。"
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "同梱フォントのライセンスは？",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "DotGothic16 は SIL Open Font License 1.1 で配布されています。美咲フォントは作者の門真なむ氏が定めるライセンスで配布されています。詳しくは同梱のライセンスの文書と、それぞれの配布元をご確認ください。"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- ここから下は JS なしでも読める紹介。#root は描画前から 1 画面ぶんの高さを持つので（src/index.css）、
+         ツールが描画されてもこの部分は画面外で押し下げられるだけで、レイアウトのずれにならない。
+         将来 AdSense の枠を足すときは、ツールとこの紹介の間か、各 section の間に高さを決めた枠を置く -->
+    <div class="container mx-auto px-4 pb-8 space-y-6 text-sm leading-relaxed">
+      <section id="about" aria-labelledby="about-title" class="rounded-lg border bg-card p-5 space-y-3">
+        <h2 id="about-title" class="text-lg font-bold">Font to Binary Converter でできること</h2>
+        <p>
+          入力した文字を、選んだフォントで 1 文字ずつドット（0 と 1）の表に変換し、C / C++ / Arduino（PROGMEM）/
+          Python / JavaScript / TypeScript / Rust / Go / JSON などのソースコードとして書き出します。OLED や LED
+          マトリクス、液晶にマイコンで文字を出すときの、フォントデータ作りに使えます。インストールは要らず、変換はすべてブラウザの中で行います。
+        </p>
+        <ul class="list-disc pl-5 space-y-1">
+          <li>
+            <strong>フォント</strong>: 美咲フォント（8×8 ドットの日本語フォント）と DotGothic16（16×16）を同梱。手持ちの TTF / OTF /
+            WOFF / WOFF2 も読み込めます
+          </li>
+          <li>
+            <strong>出力の形</strong>: 0 と 1 の 2 次元・3 次元の配列、1 次元に並べた配列、行方向・列方向のビットパック（8 ドットを 1
+            バイトに詰める形）。MSB / LSB、10 進・16 進・2 進、0 と 1 の反転を選べます
+          </li>
+          <li>
+            <strong>手直し</strong>: プレビューの文字をクリックすると、1 ドットずつ描き直せます。自由モードでは、最大 256×256
+            ドットのキャンバスに描いたドット絵をそのまま配列にできます
+          </li>
+          <li>
+            <strong>保存と共有</strong>: 設定はこのブラウザに自動で保存され、共有ボタンで同じ設定を開く URL をコピーできます
+          </li>
+        </ul>
+        <p class="text-muted-foreground">
+          作者のサイトでの紹介:
+          <a class="underline hover:text-foreground" href="https://takushio2525.com/works/font-to-bin/">Font to Binary（takushio2525.com）</a>
+        </p>
+      </section>
+
+      <section id="guides" aria-labelledby="guides-title" class="space-y-3">
+        <h2 id="guides-title" class="text-lg font-bold">使い方ガイド</h2>
+        <ul class="grid gap-3 md:grid-cols-3">
+          <li class="rounded-lg border bg-card p-4">
+            <a class="font-semibold underline-offset-2 hover:underline" href="/guide/arduino-oled-misaki/">
+              Arduino と OLED（SSD1306）で日本語を表示する
+            </a>
+            <p class="mt-1 text-muted-foreground">
+              表示したい文字だけを美咲フォント 8×8 の配列にして、日本語フォントのライブラリなしで OLED に出す手順。
+            </p>
+          </li>
+          <li class="rounded-lg border bg-card p-4">
+            <a class="font-semibold underline-offset-2 hover:underline" href="/guide/led-matrix-max7219/">
+              8×8 LED マトリクス（MAX7219）に文字を出す
+            </a>
+            <p class="mt-1 text-muted-foreground">
+              1 文字 8 バイトの配列を setRow で 1 行ずつ送る方法と、列方向の配列で文字を流す方法。
+            </p>
+          </li>
+          <li class="rounded-lg border bg-card p-4">
+            <a class="font-semibold underline-offset-2 hover:underline" href="/guide/output-format/">
+              出力の読み方：ビットパックと MSB / LSB
+            </a>
+            <p class="mt-1 text-muted-foreground">
+              行方向・列方向・ビット順の違いと、Adafruit_GFX・U8g2・MicroPython などに合わせる設定の対応表。
+            </p>
+          </li>
+        </ul>
+      </section>
+
+      <section id="faq" aria-labelledby="faq-title" class="rounded-lg border bg-card p-5 space-y-4">
+        <h2 id="faq-title" class="text-lg font-bold">よくある質問</h2>
+        <div>
+          <h3 class="font-semibold">読み込んだフォントや入力した文字は、どこかへ送信されますか？</h3>
+          <p class="mt-1">
+            送信しません。変換はすべてブラウザの中で行い、読み込んだフォントファイルや入力した文字をサーバーへ送ることはありません。設定はこのブラウザの
+            LocalStorage に保存されます。ページの閲覧は Google アナリティクスで計測していますが、共有 URL に入る設定（?s=）は計測に送らないようにしています。
+          </p>
+        </div>
+        <div>
+          <h3 class="font-semibold">どのフォントが使えますか？</h3>
+          <p class="mt-1">
+            美咲フォント（8×8 ドットの日本語フォント）と DotGothic16（16×16）を同梱しています。ほかに、システムの等幅フォントと、手持ちの TTF / OTF /
+            WOFF / WOFF2 のファイルを読み込んで使えます。
+          </p>
+        </div>
+        <div>
+          <h3 class="font-semibold">Arduino で使うにはどうすればよいですか？</h3>
+          <p class="mt-1">
+            かんたんモードの出力フォーマットで「Arduino / C言語」を選ぶと、PROGMEM（フラッシュメモリ）に置く uint8_t の配列として出力します。行方向に 8 ドットを 1 バイトへ詰めた形で、Adafruit_GFX の drawBitmap にそのまま渡せます。手順は使い方ガイドで説明しています。
+          </p>
+          <p class="mt-1">
+            → <a class="underline hover:text-foreground" href="/guide/arduino-oled-misaki/">Arduino と OLED（SSD1306）で日本語を表示する</a>
+          </p>
+        </div>
+        <div>
+          <h3 class="font-semibold">同梱フォントのライセンスは？</h3>
+          <p class="mt-1">
+            DotGothic16 は SIL Open Font License 1.1 で配布されています。美咲フォントは作者の門真なむ氏が定めるライセンスで配布されています。詳しくは同梱のライセンスの文書と、それぞれの配布元をご確認ください。
+          </p>
+          <p class="mt-1">
+            同梱の文書:
+            <a class="underline hover:text-foreground" href="https://github.com/takushio2525/font-to-bin/blob/main/public/fonts/OFL.txt">OFL.txt</a>・<a class="underline hover:text-foreground" href="https://github.com/takushio2525/font-to-bin/blob/main/public/fonts/MISAKI-LICENSE.txt">MISAKI-LICENSE.txt</a>
+            ／ 配布元:
+            <a class="underline hover:text-foreground" href="https://github.com/fontworks-fonts/DotGothic16">DotGothic16</a>・<a class="underline hover:text-foreground" href="https://littlelimit.net/misaki.htm">美咲フォント</a>
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <footer class="border-t">
+      <div class="container mx-auto px-4 py-4 text-center text-xs text-muted-foreground">
+        Built with React + Vite · Fonts: DotGothic16, Misaki Gothic 2nd ·
+        <a class="underline hover:text-foreground" href="https://github.com/takushio2525/font-to-bin">GitHub</a>
+        ·
+        <a class="underline hover:text-foreground" href="https://takushio2525.com/">作者: takushio2525</a>
+        ·
+        <a class="underline hover:text-foreground" href="https://takushio2525.com/privacy/">プライバシーポリシー</a>
+        ·
+        <!-- 押すと consent.js が同意バナーをその場で開き直す -->
+        <a class="underline hover:text-foreground" href="https://takushio2525.com/privacy/#cookie" data-tk-consent-open="">Cookie 設定</a>
+      </div>
+    </footer>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

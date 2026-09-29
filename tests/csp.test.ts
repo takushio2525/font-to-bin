@@ -3,16 +3,19 @@ import { resolve } from "node:path";
 import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
 import { buildCsp, CSP_DIRECTIVES, injectCspMeta } from "../csp";
+import { PAGES } from "../pages";
 
 const root = resolve(import.meta.dirname, "..");
 const indexHtml = readFileSync(resolve(root, "index.html"), "utf8");
 
-// <script ...>...</script> を属性と中身に分ける（index.html は手書きの小さなファイルなので正規表現で足りる）
-const scripts = [...indexHtml.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)].map((m) => ({
-  attrs: m[1],
-  body: m[2],
-  src: /\bsrc="([^"]+)"/.exec(m[1])?.[1],
-}));
+// <script ...>...</script> を属性と中身に分ける（どのページも手書きの小さなファイルなので正規表現で足りる）。
+// 構造化データ（type="application/ld+json"）は実行されないデータなので、CSP の対象から外す
+function scriptsOf(html: string) {
+  return [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)]
+    .map((m) => ({ attrs: m[1], body: m[2], src: /\bsrc="([^"]+)"/.exec(m[1])?.[1] }))
+    .filter((s) => !/type="application\/ld\+json"/.test(s.attrs));
+}
+const scripts = scriptsOf(indexHtml);
 
 // CSP のソース表現に URL が当てはまるか（ホストの先頭ワイルドカードとパスの前方一致だけを扱う）
 function allowedBy(sources: string[], url: string): boolean {
@@ -27,6 +30,26 @@ function allowedBy(sources: string[], url: string): boolean {
     return hostOk && pathOk;
   });
 }
+
+describe.each(PAGES.map((p) => [p.file, scriptsOf(readFileSync(resolve(root, p.file), "utf8"))] as const))(
+  "%s のスクリプトと CSP",
+  (_file, pageScripts) => {
+    it("インラインスクリプトが無く、読み込む外部スクリプトはすべて script-src で許している", () => {
+      expect(pageScripts.length).toBeGreaterThan(0);
+      for (const s of pageScripts) {
+        expect(s.src, `インラインの <script>: ${s.body.trim().slice(0, 60)}`).toBeTruthy();
+        expect(s.body.trim()).toBe("");
+        expect(allowedBy(CSP_DIRECTIVES["script-src"], s.src!), s.src).toBe(true);
+      }
+    });
+
+    it("consent.js を Google タグの初期化より前に読む", () => {
+      const srcs = pageScripts.map((s) => s.src);
+      expect(srcs).toContain("/ga-init.js");
+      expect(srcs.indexOf("https://takushio2525.com/consent/consent.js")).toBeLessThan(srcs.indexOf("/ga-init.js"));
+    });
+  }
+);
 
 describe("index.html と CSP", () => {
   it("インラインスクリプトが無い（script-src に 'unsafe-inline' を足さずに済む）", () => {
