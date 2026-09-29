@@ -123,17 +123,21 @@ function formatC(glyphs: Glyph[], opts: FormatOptions): string {
   if (opts.prefix) lines.push(opts.prefix);
   lines.push(`${nameWithDims} = {`);
 
-  glyphs.forEach((g, i) => {
+  // 2次元配列 [行][列] には1文字分しか入らないので、先頭の1文字だけを出す
+  const targets = opts.structure === "matrix2d" ? glyphs.slice(0, 1) : glyphs;
+  // 文字単位の中括弧があるのは matrix3d だけ。それ以外はコメントを値と同じ字下げにそろえる
+  const comment = opts.structure === "matrix3d" ? "  //" : "//";
+  targets.forEach((g, i) => {
     if (opts.includeCharComment) {
       lines.push(
         indentBlock(
-          charComment(g, opts, "  //", "  //", ""),
+          charComment(g, opts, comment, comment, ""),
           opts.indent
         )
       );
     }
     lines.push(indentBlock(encodeOneC(g, opts, bitWidth), opts.indent));
-    if (i < glyphs.length - 1) {
+    if (i < targets.length - 1) {
       // カンマを最後の行末に追加
       const lastIdx = lines.length - 1;
       lines[lastIdx] = lines[lastIdx] + ",";
@@ -155,21 +159,25 @@ function buildCDeclaration(
   height: number,
   arduino: boolean
 ): string {
-  const progmem = arduino ? " PROGMEM" : "";
+  // データ型に const / PROGMEM が書かれていれば重ねて付けない
+  // （旧プリセットの "const uint8_t PROGMEM" が LocalStorage や共有 URL に残っていることがある）
+  const hasWord = (word: string) => new RegExp(`\\b${word}\\b`).test(dataType);
+  const type = hasWord("const") ? dataType : `const ${dataType}`;
+  const progmem = arduino && !hasWord("PROGMEM") ? " PROGMEM" : "";
   if (structure === "matrix3d") {
-    return `const ${dataType} ${name}[${count}][${height}][${width}]${progmem}`;
+    return `${type} ${name}[${count}][${height}][${width}]${progmem}`;
   }
   if (structure === "matrix2d") {
-    return `const ${dataType} ${name}[${height}][${width}]${progmem}`;
+    return `${type} ${name}[${height}][${width}]${progmem}`;
   }
   if (structure === "flat") {
     const total = count * height * width;
-    return `const ${dataType} ${name}[${total}]${progmem}`;
+    return `${type} ${name}[${total}]${progmem}`;
   }
   // ビットパック
   // 1文字あたりのバイト数 ≒ ceil(w*h/8) の近似（行/列でceilは各ライン単位）
   // 厳密計算
-  return `const ${dataType} ${name}[]${progmem}`;
+  return `${type} ${name}[]${progmem}`;
 }
 
 function encodeOneC(
@@ -186,21 +194,19 @@ function encodeOneC(
       const s = r.map((v) => formatNumber(v, opts.radix, bitWidth)).join(", ");
       return `{${s}}`;
     });
+    // matrix2d は宣言 [行][列] の直下に行を並べるので、文字単位の中括弧を付けない
+    if (opts.structure === "matrix2d") return rows.join(",\n");
     const body = rows.map((r) => opts.indent + r).join(",\n");
     return `{\n${body}\n}`;
   }
 
-  // flat / bitpack: 1D
+  // flat / bitpack: 宣言が1次元なので、文字単位の中括弧を付けずに値を並べる
   const arr = encoded as number[];
   const chunks = chunkArray(arr, opts.itemsPerLine);
   const bitw = opts.structure.startsWith("bitpack") ? 8 : 1;
-  const body = chunks
-    .map(
-      (c) =>
-        opts.indent + c.map((v) => formatNumber(v, opts.radix, bitw)).join(", ")
-    )
+  return chunks
+    .map((c) => c.map((v) => formatNumber(v, opts.radix, bitw)).join(", "))
     .join(",\n");
-  return `{\n${body}\n}`;
 }
 
 // ─── Python ───────────────────────────────

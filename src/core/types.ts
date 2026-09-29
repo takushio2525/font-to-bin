@@ -58,7 +58,7 @@ export type BitOrder = "msb" | "lsb";
 export type FormatOptions = {
   language: OutputLanguage;
   structure: Structure;
-  dataType: string;        // 例: "uint8_t", "const uint8_t PROGMEM"
+  dataType: string;        // 例: "uint8_t"（C 系の const と Arduino の PROGMEM は出力側で付ける）
   bitOrder: BitOrder;      // ビットパック時
   radix: Radix;            // 表記
   invert: boolean;         // 0/1 反転
