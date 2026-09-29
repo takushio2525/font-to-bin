@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { cspMetaPlugin } from "./csp";
 import { PAGES, sitemapPlugin } from "./pages";
+import { thirdPartyLicensesPlugin } from "./third-party-licenses";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,7 +13,7 @@ const __dirname = path.dirname(__filename);
 // 開発・本番ともに base は '/'
 export default defineConfig(() => ({
   base: "/",
-  plugins: [react(), cspMetaPlugin(), sitemapPlugin()],
+  plugins: [react(), cspMetaPlugin(), sitemapPlugin(), thirdPartyLicensesPlugin()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

@@ -15,5 +15,5 @@
     "noFallthroughCasesInSwitch": true,
     "types": ["node"]
   },
-  "include": ["vite.config.ts", "csp.ts", "pages.ts", "tests"]
+  "include": ["vite.config.ts", "csp.ts", "pages.ts", "third-party-licenses.ts", "tests"]
 }
