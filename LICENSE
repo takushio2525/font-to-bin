@@ -26,9 +26,16 @@ NOTE: This license applies only to the source code of this project.
 The bundled font files under `public/fonts/` are licensed separately:
 
 - DotGothic16-Regular.ttf
-  © Fontworks Inc., licensed under the SIL Open Font License, Version 1.1.
-  See `public/fonts/OFL.txt`.
+  Copyright 2020 The DotGothic16 Project Authors
+  (https://github.com/fontworks-fonts/DotGothic16), licensed under the
+  SIL Open Font License, Version 1.1. See `public/fonts/OFL.txt`.
 
-- misaki_gothic_2nd.ttf (美咲フォント 第2版)
-  © 門真なむ (Kadoma Namu). Free for use, modification, and redistribution.
+- misaki_gothic_2nd.ttf (美咲ゴシック第2 / MisakiGothic2nd, 2021-05-05)
+  Copyright(C) 2002-2021 Num Kadoma. Free software: unlimited permission to
+  use, copy, and distribute, with or without modification, commercially or
+  noncommercially, provided "AS IS" without warranty.
   See `public/fonts/MISAKI-LICENSE.txt`.
+
+Third-party open source software bundled into the built JavaScript/CSS is
+listed with its license texts in `third-party-licenses.txt`, which is
+generated at build time and served at the site root.

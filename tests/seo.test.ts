@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { buildSitemap, PAGES, pageUrl, SITE_ORIGIN } from "../pages";
+import { THIRD_PARTY_LICENSES_FILE } from "../third-party-licenses";
 
 // 検索エンジン向けの作りの検査。公開ページ（pages.ts の PAGES）ごとに、
 // canonical・メタ情報・構造化データ・JS なしで読める本文・内部リンクを確かめる
@@ -79,8 +80,8 @@ describe.each(pages)("$path", (page) => {
     }
   });
 
-  it("内部リンクはすべて公開ページか public/ のファイルを指す", () => {
-    const known = new Set(pages.map((p) => p.path));
+  it("内部リンクはすべて公開ページか public/ のファイル（とビルドで作るライセンス文）を指す", () => {
+    const known = new Set([...pages.map((p) => p.path), `/${THIRD_PARTY_LICENSES_FILE}`]);
     const hrefs = [...html.matchAll(/\bhref="(\/[^"#]*)(?:#[^"]*)?"/g)].map((m) => m[1]);
     expect(hrefs.length).toBeGreaterThan(0);
     for (const href of hrefs) {

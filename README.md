@@ -80,9 +80,10 @@ npm test          # ユニットテスト (vitest)
 │   ├── main.tsx
 │   ├── index.css
 │   └── guide.css         ← 使い方ガイドの見た目（色は index.css の変数を使う）
-├── tests/                         ← CSP・全ページの canonical / 構造化データ / sitemap のテスト
+├── tests/                         ← CSP・全ページの canonical / 構造化データ / sitemap・ライセンス文の一覧のテスト
 ├── csp.ts                         ← CSP の定義（ビルド時に meta で埋め込む）
 ├── pages.ts                       ← 公開ページの一覧（ビルドの入口と sitemap.xml の生成元）
+├── third-party-licenses.ts        ← 配信物に入った OSS のライセンス文を third-party-licenses.txt に出す（ビルド時）
 ├── .github/workflows/deploy.yml   ← GitHub Pages 自動デプロイ
 ├── doc/                           ← LaTeX 仕様書
 └── legacy/                        ← 旧Python版（参考）
@@ -138,13 +139,16 @@ GitHub Pages ではレスポンスヘッダを付けられないため、Content
 本プロジェクトのソースコードは [MIT License](LICENSE) の下で公開されています。
 同梱フォントは本プロジェクトのライセンスとは別に、それぞれのライセンスが適用されます。
 
-| フォント | 作者 | ライセンス | ライセンス本文 |
+| フォント | 著作権者 | ライセンス | ライセンス本文 |
 |---|---|---|---|
-| DotGothic16 | Fontworks Inc. | SIL Open Font License 1.1 | [`public/fonts/OFL.txt`](public/fonts/OFL.txt) |
-| 美咲フォント 第2版 (Misaki Gothic 2nd) | 門真なむ (Kadoma Namu) | 自由利用可（クレジット推奨） | [`public/fonts/MISAKI-LICENSE.txt`](public/fonts/MISAKI-LICENSE.txt) |
+| DotGothic16 | The DotGothic16 Project Authors（Fontworks） | SIL Open Font License 1.1 | [`public/fonts/OFL.txt`](public/fonts/OFL.txt) |
+| 美咲ゴシック第2（美咲フォント 2021-05-05 版） | Num Kadoma（門真 なむ） | 改変の有無・商用を問わず利用・複製・再配布が自由（無保証） | [`public/fonts/MISAKI-LICENSE.txt`](public/fonts/MISAKI-LICENSE.txt) |
 
 - DotGothic16: <https://github.com/fontworks-fonts/DotGothic16>
-- 美咲フォント: <https://littlelimit.net/misaki.htm>
+- 美咲フォント: <https://littlelimit.net/misaki.htm>（ライセンスは <https://littlelimit.net/font.htm#license>）
+- 本番では両方の文書を `/fonts/OFL.txt`・`/fonts/MISAKI-LICENSE.txt` として、フォントのファイルと並べて配信しています。
+- 変換した配列の扱い: DotGothic16 から作った配列をフォント（文字の形のデータ）として機器やソフトに組み込んで配るときは、OFL の改変版として扱い、著作権表示と OFL を添えてください（配列の部分は OFL のまま。組み込む先のプログラムのライセンスは自由）。美咲フォントには条件がありません。
+- 配信している JS / CSS に入っている OSS のライセンス文は、ビルドのたびに `third-party-licenses.txt` として出力し、本番の `/third-party-licenses.txt` で公開しています（`third-party-licenses.ts`）。
 
 ユーザーがアップロードしたフォントはブラウザ内でのみ処理され、サーバーには送信されません。
 
