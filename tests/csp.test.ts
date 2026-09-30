@@ -17,6 +17,9 @@ function scriptsOf(html: string) {
 }
 const scripts = scriptsOf(indexHtml);
 
+const CONSENT_SRC = "https://takushio2525.com/consent/consent.js";
+const GA_ID = "G-30GVXMB0GH";
+
 // CSP のソース表現に URL が当てはまるか（ホストの先頭ワイルドカードとパスの前方一致だけを扱う）
 function allowedBy(sources: string[], url: string): boolean {
   if (url.startsWith("/")) return sources.includes("'self'");
@@ -43,10 +46,22 @@ describe.each(PAGES.map((p) => [p.file, scriptsOf(readFileSync(resolve(root, p.f
       }
     });
 
-    it("consent.js を Google タグの初期化より前に読む", () => {
+    // ハブの consent.js の新しい形（basic 型）。gtag.js は consent.js が読んでよいときだけ差し込むので、
+    // ページが直接読むと EEA・英国・スイスでも同意の前に Google へ送られてしまう
+    it("gtag.js を直接読まず、consent.js に測定 ID を渡し、その前に ga-config.js を同期で読む", () => {
       const srcs = pageScripts.map((s) => s.src);
-      expect(srcs).toContain("/ga-init.js");
-      expect(srcs.indexOf("https://takushio2525.com/consent/consent.js")).toBeLessThan(srcs.indexOf("/ga-init.js"));
+      expect(srcs.filter((src) => src!.includes("googletagmanager.com"))).toEqual([]);
+      expect(srcs).not.toContain("/ga-init.js");
+
+      const consent = pageScripts.filter((s) => s.src === CONSENT_SRC);
+      expect(consent).toHaveLength(1);
+      expect(/\bdata-ga-id="([^"]*)"/.exec(consent[0].attrs)?.[1]).toBe(GA_ID);
+
+      // tkGaConfig は consent.js が読み込み時に評価することがある（同意済みのとき）ので、先に置かれていないといけない
+      const config = pageScripts.filter((s) => s.src === "/ga-config.js");
+      expect(config).toHaveLength(1);
+      expect(srcs.indexOf("/ga-config.js")).toBeLessThan(srcs.indexOf(CONSENT_SRC));
+      for (const s of [...consent, ...config]) expect(s.attrs).not.toMatch(/\b(async|defer)\b/);
     });
   }
 );
@@ -100,44 +115,34 @@ describe("index.html と CSP", () => {
   it("referrer は strict-origin-when-cross-origin を明示している", () => {
     expect(indexHtml).toContain('<meta name="referrer" content="strict-origin-when-cross-origin" />');
   });
-
-  it("consent.js を Google タグの初期化より前に読む", () => {
-    const srcs = scripts.map((s) => s.src);
-    expect(srcs.indexOf("https://takushio2525.com/consent/consent.js")).toBeLessThan(
-      srcs.indexOf("/ga-init.js")
-    );
-  });
 });
 
-describe("public/ga-init.js", () => {
-  const code = readFileSync(resolve(root, "public/ga-init.js"), "utf8");
+describe("public/ga-config.js", () => {
+  const code = readFileSync(resolve(root, "public/ga-config.js"), "utf8");
 
-  // ブラウザの代わりに、window・location・dataLayer だけを持つ環境で動かして dataLayer を見る
-  function run(href: string, tkConsent?: object) {
-    const sandbox: Record<string, unknown> = { location: new URL(href), URL, Date, tkConsent };
+  // ブラウザの代わりに、window と location だけを持つ環境で動かす
+  function load(href: string) {
+    const sandbox: Record<string, unknown> = { location: new URL(href), URL };
     sandbox.window = sandbox;
     runInNewContext(code, sandbox);
-    return (sandbox.dataLayer as IArguments[]).map((args) => Array.from(args));
+    return sandbox as { location: URL; tkGaConfig?: () => { page_location: string } } & Record<string, unknown>;
   }
 
   it("共有 URL の ?s= を page_location から除き、他のパラメータは残す", () => {
-    const calls = run("https://font-to-bin.takushio2525.com/?utm_source=x&s=eyJ0ZXh0IjoiQSJ9", {});
-    const config = calls.find((c) => c[0] === "config");
-    expect(config?.[1]).toBe("G-30GVXMB0GH");
-    expect((config?.[2] as { page_location: string }).page_location).toBe(
-      "https://font-to-bin.takushio2525.com/?utm_source=x"
-    );
+    const w = load("https://font-to-bin.takushio2525.com/?utm_source=x&s=eyJ0ZXh0IjoiQSJ9");
+    expect(w.tkGaConfig!()).toEqual({ page_location: "https://font-to-bin.takushio2525.com/?utm_source=x" });
   });
 
-  it("consent.js が読めていないときは全部 denied を宣言する", () => {
-    const calls = run("https://font-to-bin.takushio2525.com/");
-    const consent = calls.find((c) => c[0] === "consent");
-    expect(consent?.[1]).toBe("default");
-    expect(Object.values(consent?.[2] as object).every((v) => v === "denied")).toBe(true);
+  it("consent.js が gtag.js を読む時点の URL で組み立てる（同意を待ってから読む EEA でも伏せる）", () => {
+    const w = load("https://font-to-bin.takushio2525.com/guide/output-format/");
+    expect(typeof w.tkGaConfig).toBe("function");
+    w.location.href = "https://font-to-bin.takushio2525.com/guide/output-format/?s=eyJ0ZXh0IjoiQSJ9";
+    expect(w.tkGaConfig!()).toEqual({ page_location: "https://font-to-bin.takushio2525.com/guide/output-format/" });
   });
 
-  it("consent.js が読めているときは既定値を上書きしない", () => {
-    const calls = run("https://font-to-bin.takushio2525.com/", {});
-    expect(calls.some((c) => c[0] === "consent")).toBe(false);
+  it("gtag を呼ばない（config は consent.js が積む。ここでも積むと page_view が二重に送られる）", () => {
+    const w = load("https://font-to-bin.takushio2525.com/?s=eyJ0ZXh0IjoiQSJ9");
+    expect(w.dataLayer).toBeUndefined();
+    expect(w.gtag).toBeUndefined();
   });
 });
