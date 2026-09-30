@@ -7,10 +7,9 @@
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <script src="/theme-init.js"></script>
 
-    <!-- Cookie 同意と GA4 はツール本体（/index.html）と同じ順番で読む -->
-    <script src="https://takushio2525.com/consent/consent.js"></script>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-30GVXMB0GH"></script>
-    <script src="/ga-init.js"></script>
+    <!-- Cookie 同意と GA4 はツール本体（/index.html）と同じ順番で読む（ga-config.js が先。gtag.js は consent.js が差し込む） -->
+    <script src="/ga-config.js"></script>
+    <script src="https://takushio2525.com/consent/consent.js" data-ga-id="G-30GVXMB0GH"></script>
     <meta name="google-adsense-account" content="ca-pub-3136871606832456" />
 
     <title>8×8 LED マトリクス（MAX7219）に文字を表示する：ドットフォントを 1 文字 8 バイトの配列にする | Font to Binary Converter</title>

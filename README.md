@@ -46,7 +46,7 @@ npm test          # ユニットテスト (vitest)
 ├── public/
 │   ├── fonts/            ← 同梱TTFフォント
 │   ├── CNAME             ← カスタムドメイン設定
-│   ├── ga-init.js        ← Google タグの初期化（CSP のため外部ファイル）
+│   ├── ga-config.js      ← GA4 の config に足す引数（?s= を伏せる。CSP のため外部ファイル）
 │   ├── theme-init.js     ← 保存したテーマを描画前に当てる（全ページ共通）
 │   ├── robots.txt        ← sitemap.xml の場所を示す
 │   ├── favicon.svg
@@ -106,7 +106,7 @@ npm test          # ユニットテスト (vitest)
 
 ## アクセス解析と Cookie 同意
 
-GA4 の計測は、ハブ takushio2525.com が配る共用の同意スクリプト（`https://takushio2525.com/consent/consent.js`、Google Consent Mode v2）の下で動きます。`index.html` の `<head>` で consent.js を gtag より前に同期で読み込み、EEA・英国・スイスの閲覧者にだけ同意バナーを出します。選択は `.takushio2525.com` 共通の Cookie `tk_consent` に保存され、一族の全サイトで共有されます。Google タグの初期化は `public/ga-init.js` にあり、consent.js が読めなかったときはここで全項目を denied に倒します。共有 URL の `?s=`（入力した文字と設定）は `page_location` から除いて送ります。フッターの「プライバシーポリシー」は `https://takushio2525.com/privacy/` へ、「Cookie 設定」（`data-tk-consent-open`）はバナーを開き直します。この順番を崩すと同意前に計測が始まるので、gtag を触るときは consent.js より下に置いたままにしてください。
+GA4 の計測は、ハブ takushio2525.com が配る共用の同意スクリプト（`https://takushio2525.com/consent/consent.js`、Google Consent Mode v2）が受け持ちます。各ページ（`index.html` と `guide/*/index.html`）の `<head>` では consent.js を `data-ga-id="G-30GVXMB0GH"` 付きで同期で読み込むだけで、gtag.js と `gtag('config')` はページに書きません（ハブの手順書でいう「新しい形」＝ basic 型）。consent.js が地域と選択を見て、読んでよいときだけ gtag.js を差し込みます。EEA・英国・スイスでは、バナーで「同意する」を選ぶまで gtag.js を読まず、Google へは何も送りません（国が判定できないときも、バナーを出さずに読みません）。それ以外の地域では、選んでいなければ国の判定の後に読み込みます。「必要なものだけ」を選ぶと、どの地域でも読み込みません。選択は `.takushio2525.com` 共通の Cookie `tk_consent` に保存され、一族の全サイトで共有されます。共有 URL の `?s=`（入力した文字と設定）は `page_location` から除いて送ります（GA4 のサイト内検索が実際の URL から `s` を読む分は別の課題として #25 に残っています）。その引数は `public/ga-config.js` が `window.tkGaConfig` に置き、consent.js が gtag.js を読む時点で評価します（同意済みの人には consent.js の実行中に評価するので、ga-config.js は必ず consent.js より前に置いてください）。フッターの「プライバシーポリシー」は `https://takushio2525.com/privacy/` へ、「Cookie 設定」（`data-tk-consent-open`）はバナーを開き直します。gtag.js を直接読んだり config をページ側で積んだりすると、EEA でも同意の前に送られたり page_view が二重になったりするので、`tests/csp.test.ts` がこの並びを検査しています。
 
 ## セキュリティ
 

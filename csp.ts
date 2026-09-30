@@ -6,10 +6,11 @@ import type { Plugin } from "vite";
 //
 // 外部に許すのは次の 2 系統だけ。追加するときは tests/csp.test.ts も通ることを確かめる。
 // - https://takushio2525.com/consent/ … ハブの同意スクリプト consent.js と国判定 API /consent/region
-// - Google タグ（gtag.js）と GA4 の送信先 … Google の「GA4 で CSP を使う」ガイドの基本の一覧
+// - Google タグ（gtag.js）と GA4 の送信先 … Google の「GA4 で CSP を使う」ガイドの基本の一覧。
+//   gtag.js は consent.js が読んでよいときだけ動的に差し込むので、script-src にホストで許しておく必要がある
 export const CSP_DIRECTIVES: Record<string, string[]> = {
   "default-src": ["'self'"],
-  // インラインスクリプトは許さない（Google タグの初期化も public/ga-init.js に外出ししている）
+  // インラインスクリプトは許さない（GA4 の config に足す引数も public/ga-config.js に外出ししている）
   "script-src": [
     "'self'",
     "https://takushio2525.com/consent/",
@@ -25,6 +26,7 @@ export const CSP_DIRECTIVES: Record<string, string[]> = {
   ],
   // 同梱フォントは同一オリジン。アップロードしたフォントは ArrayBuffer から読むので対象外
   "font-src": ["'self'"],
+  // 国判定（/consent/region）が止まると、consent.js は判定に失敗した扱いにして日本でも GA4 を読まない
   "connect-src": [
     "'self'",
     "https://takushio2525.com/consent/",
