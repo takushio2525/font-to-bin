@@ -8,13 +8,14 @@
     <!-- 保存したテーマ（ダーク / ライト）を描画前に当てる -->
     <script src="/theme-init.js"></script>
 
-    <!-- GA4 の config に足す引数（共有 URL の ?s= を伏せた page_location）。consent.js が読む時点で評価するので、必ずその前に同期で読む -->
+    <!-- GA4 の config に足す引数（共有 URL の ?s= を伏せた page_location）。consent.js が読む時点で評価するので、必ずその前に同期で読む
+         （async / defer を付けない。文書で前にある同期の script は、後ろの async の consent.js より必ず先に走る） -->
     <script src="/ga-config.js"></script>
 
-    <!-- Cookie 同意（Consent Mode v2）と GA4。ハブ takushio2525.com の共用スクリプトで、同期で読む。
+    <!-- Cookie 同意（Consent Mode v2）と GA4。ハブ takushio2525.com の共用スクリプトで、async で読み最初の描画を止めない（#27）。
          gtag.js はこのスクリプトが読んでよいときだけ差し込む（EEA・英国・スイスでは同意してから）。
          ページ側で gtag.js や config を書かない。GA4 の測定 ID は takushio2525.com 一族で共通 -->
-    <script src="https://takushio2525.com/consent/consent.js" data-ga-id="G-30GVXMB0GH"></script>
+    <script async src="https://takushio2525.com/consent/consent.js" data-ga-id="G-30GVXMB0GH"></script>
 
     <!-- AdSense のサイト所有権確認（メタタグ方式。広告ユニットは未配置） -->
     <meta name="google-adsense-account" content="ca-pub-3136871606832456" />
