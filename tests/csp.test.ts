@@ -48,7 +48,7 @@ describe.each(PAGES.map((p) => [p.file, scriptsOf(readFileSync(resolve(root, p.f
 
     // ハブの consent.js の新しい形（basic 型）。gtag.js は consent.js が読んでよいときだけ差し込むので、
     // ページが直接読むと EEA・英国・スイスでも同意の前に Google へ送られてしまう
-    it("gtag.js を直接読まず、consent.js に測定 ID を渡し、その前に ga-config.js を同期で読む", () => {
+    it("gtag.js を直接読まず、consent.js に測定 ID を渡して async で読み、その前に ga-config.js を同期で読む", () => {
       const srcs = pageScripts.map((s) => s.src);
       expect(srcs.filter((src) => src!.includes("googletagmanager.com"))).toEqual([]);
       expect(srcs).not.toContain("/ga-init.js");
@@ -57,11 +57,16 @@ describe.each(PAGES.map((p) => [p.file, scriptsOf(readFileSync(resolve(root, p.f
       expect(consent).toHaveLength(1);
       expect(/\bdata-ga-id="([^"]*)"/.exec(consent[0].attrs)?.[1]).toBe(GA_ID);
 
-      // tkGaConfig は consent.js が読み込み時に評価することがある（同意済みのとき）ので、先に置かれていないといけない
+      // consent.js は async（同期だと最初の描画を止める。#27）。defer は付けない
+      expect(consent[0].attrs).toMatch(/\basync\b/);
+      expect(consent[0].attrs).not.toMatch(/\bdefer\b/);
+
+      // tkGaConfig は consent.js が読み込み時に評価することがある（同意済みのとき）ので、先に同期で置かれていないといけない。
+      // 文書で前にある同期の script は、後ろの async の consent.js より必ず先に走る
       const config = pageScripts.filter((s) => s.src === "/ga-config.js");
       expect(config).toHaveLength(1);
       expect(srcs.indexOf("/ga-config.js")).toBeLessThan(srcs.indexOf(CONSENT_SRC));
-      for (const s of [...consent, ...config]) expect(s.attrs).not.toMatch(/\b(async|defer)\b/);
+      expect(config[0].attrs).not.toMatch(/\b(async|defer)\b/);
     });
   }
 );
